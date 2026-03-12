@@ -28,6 +28,17 @@ This system will have 4 major/core roles
 - As a student, I want to upload supporting documents/images with my weekly logs so that I can provide evidence of my work
 - As a student, I want to be prevented from submitting logs after the deadline so that I follow the internship rules
 
+## The Internship Administrator user stories
+
+Supervisor Assignment
+As an internship administrator, I want to assign workplace supervisors to student interns so that each student is properly monitored during their internship.
+
+Manage Internship Records
+As an internship administrator, I want to create and manage internship records for students so that internship information is organized and accessible.
+
+Monitor Internship Activities
+As an internship administrator, I want to monitor internship activities and submissions so that I can ensure all interns are actively participating.
+
 
 
 2. Workplace Supervisor
@@ -54,6 +65,19 @@ This system will have 4 major/core roles
 - The system shall allow students to view all their logs with their current status
 - The system shall send reminder notifications to students 24 hours before log submission deadlines
 - The system shall change placement status from 'Pending' to 'Active' upon approval, and to 'Completed' after end date
+
+
+
+
+
+## Their functional Requirements
+
+The system shall allow the internship administrator to assign workplace supervisors to student interns.
+
+The system shall allow the internship administrator to create, update, and manage internship records for students.
+
+The system shall allow the internship administrator to view and monitor internship activities and student submissions.
+
 
    ## Non Functional Requirements   
 
