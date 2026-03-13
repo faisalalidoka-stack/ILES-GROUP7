@@ -76,6 +76,25 @@ This system will have 4 major/core roles
 - The system shall change placement status from 'Pending' to 'Active' upon approval, and to 'Completed' after end date
 
    ## Non Functional Requirements   
+These decribe how the system should perform 
+1. Security
+* The systemm shall enforce authentication and authorization
+* Sensitive data shall be protected using secure APIs 
+* Only authorized users can access specific modules
+2. Performance 
+* The system should support multiple users simultaneously.
+* API responses should be fast and efficient
+3. Reliability
+* The system should ensure data consistency
+* The system should prevent duplicate or conflicting records
+4. Usability
+* The system shall have an intuitive web interface
+* The interface should support easy navigation for all roles.
+5. Scalability
+* The system should be able to support more students and supervisors in the future
+6. Maintainability
+* Code should follow clean architecture and modular design 
+* The system should allow future feature additions
 
 ## 5. System Modules
 - User Management
