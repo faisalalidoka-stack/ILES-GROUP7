@@ -32,6 +32,26 @@ This system will have 4 major/core roles
 
 2. Workplace Supervisor
 3. Academic Supervisor
+3. Academic Supervisor
+### User Stories
+- As an academic supervisor, I want to view all students under my supervision so that I can track their internship progress.
+- As an academic supervisor, I want to review industry supervisor scores and comments so that I have context for my evaluation.
+- As an academic supervisor, I want to assign academic scores based on learning outcomes so that the final grade can be computed.
+- As an academic supervisor, I want to add final remarks and feedback for each student so that they understand their performance.
+- As an academic supervisor, I want to flag students who are not submitting logs consistently so that I can intervene.
+- As an academic supervisor, I want to view aggregated reports of my students performance so that I can identify trends.
+- As an academic supervisor, I want to be notified when all industry evaluations are complete so that I can begin my evaluation.
+
+### Functional Requirements
+- The system shall display a list of all students assigned to the academic supervisor.
+- The system shall allow the academic supervisor to view industry supervisor scores and comments for each student.
+- The system shall allow the academic supervisor to assign academic scores based on predefined learning outcomes.
+- The system shall allow the academic supervisor to add written remarks and feedback for each student.
+- The system shall allow the academic supervisor to flag students with inconsistent log submissions.
+- The system shall provide aggregated performance reports for all supervised students.
+- The system shall send a notification to the academic supervisor when all industry evaluations are completed.
+
+
 4. Internship Administrator
 
 
