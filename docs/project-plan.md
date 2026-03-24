@@ -39,6 +39,17 @@ As an internship administrator, I want to create and manage internship records f
 Monitor Internship Activities
 As an internship administrator, I want to monitor internship activities and submissions so that I can ensure all interns are actively participating.
 
+## The Internship Administrator user stories
+
+Supervisor Assignment
+As an internship administrator, I want to assign workplace supervisors to student interns so that each student is properly monitored during their internship.
+
+Manage Internship Records
+As an internship administrator, I want to create and manage internship records for students so that internship information is organized and accessible.
+
+Monitor Internship Activities
+As an internship administrator, I want to monitor internship activities and submissions so that I can ensure all interns are actively participating.
+
 
 
 2. Workplace Supervisor
@@ -92,6 +103,32 @@ As an internship administrator, I want to monitor internship activities and subm
 - The system shall allow students to view all their logs with their current status
 - The system shall send reminder notifications to students 24 hours before log submission deadlines
 - The system shall change placement status from 'Pending' to 'Active' upon approval, and to 'Completed' after end date
+
+### Workplace Supervisor
+- The system shall allow workplace supervisors to view a list of interns assigned to them.
+- The system shall allow workplace supervisors to access and review weekly internship logs submitted by interns.
+- The system shall allow workplace supervisors to approve or reject submitted weekly internship logs.
+- The system shall allow workplace supervisors to provide comments or feedback on intern reports and logs.
+- The system shall allow workplace supervisors to complete and submit intern evaluation forms.
+- The system shall allow workplace supervisors to update the evaluation status (e.g., draft, submitted, reviewed, approved, rejected).
+
+### Internship Administrator
+- The system shall allow the internship administrator to assign workplace supervisors to student interns.
+- The system shall allow the internship administrator to create, update, and manage internship records for students.
+- The system shall allow the internship administrator to view and monitor internship activities and student submissions.
+
+
+
+
+
+## Their functional Requirements
+
+The system shall allow the internship administrator to assign workplace supervisors to student interns.
+
+The system shall allow the internship administrator to create, update, and manage internship records for students.
+
+The system shall allow the internship administrator to view and monitor internship activities and student submissions.
+
 
 ## Non Functional Requirements
 These decribe how the system should perform
