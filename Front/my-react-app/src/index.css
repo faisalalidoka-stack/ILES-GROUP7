@@ -1,0 +1,23 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+}
+
+body {
+  background-color: #f0f2f5;
+  color: #2c3e50;
+}
+
+input {
+  outline: none;
+}
+
+input:focus {
+  border-color: #2c3e50 !important;
+}
+
+button:hover {
+  opacity: 0.9;
+}
