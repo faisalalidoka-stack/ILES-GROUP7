@@ -1,47 +1,78 @@
-import { loginUser } from "../services/api";
 import { useState } from "react";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const containerStyle = {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100vh",
+    backgroundColor: "#f0f2f5"
+  };
+
+  const boxStyle = {
+    background: "white",
+    padding: "2rem",
+    borderRadius: "12px",
+    width: "350px",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+  };
+
+  const inputStyle = {
+    width: "100%",
+    padding: "10px",
+    margin: "10px 0",
+    borderRadius: "8px",
+    border: "1px solid #ccc",
+    boxSizing: "border-box"
+  };
+
+  const buttonStyle = {
+    width: "100%",
+    padding: "10px",
+    backgroundColor: loading ? "#aaa" : "#2c3e50",
+    color: "white",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+    fontSize: "16px",
+    marginTop: "10px"
+  };
 
   const handleLogin = async () => {
-  const data = { email, password };
-  try {
-    const res = await loginUser(data);
-    console.log("Backend response:", res);
-    alert("Login response: " + JSON.stringify(res));
-  } catch (error) {
-    console.error("Login error:", error);
-    alert("Failed to connect to backend. Make sure backend is running on port 8000");
-  }
-};
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch("http://127.0.0.1:8000/login/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      const res = await response.json();
+      if (!response.ok) setError(res.message || "Login failed");
+    } catch (err) {
+      setError("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div style={{ padding: "20px", maxWidth: "300px", margin: "0 auto" }}>
-      <h2>Login</h2>
-      <div>
-        <input
-          type="email"
-          placeholder="Email"
-          style={{ width: "100%", padding: "8px", margin: "8px 0" }}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+    <div style={containerStyle}>
+      <div style={boxStyle}>
+        <h2 style={{ textAlign: "center", color: "#2c3e50" }}>ILES System</h2>
+        <p style={{ textAlign: "center", color: "#888" }}>Sign in to your account</p>
+        {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
+        <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
+        <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} style={inputStyle} />
+        <button onClick={handleLogin} disabled={loading} style={buttonStyle}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
       </div>
-      <div>
-        <input
-          type="password"
-          placeholder="Password"
-          style={{ width: "100%", padding: "8px", margin: "8px 0" }}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-      </div>
-      <button 
-        onClick={handleLogin}
-        style={{ width: "100%", padding: "10px", marginTop: "10px" }}
-      >
-        Login
-      </button>
     </div>
   );
 }
