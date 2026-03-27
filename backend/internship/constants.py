@@ -36,3 +36,23 @@ VALID_LOG_TRANSITIONS = {
     "Rejected": ["Draft"],
     "Approved": []
 }
+
+EVAL_STATUSES = [
+    ('Draft', 'Draft'),
+    ('Submitted', 'Submitted'),
+    ('Reviewed', 'Reviewed'),
+]
+
+VALID_EVAL_TRANSITIONS = {
+    "Draft": ["Submitted"],
+    "Submitted": ["Reviewed"],
+    "Reviewed": []
+}
+
+
+VALID_PLACEMENT_TRANSITIONS = {
+    "Pending": ["Active", "Rejected"],
+    "Active": ["Completed"],
+    "Rejected": [],
+    "Completed": []
+}

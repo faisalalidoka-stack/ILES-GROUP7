@@ -4,19 +4,18 @@ This file intentionally stays small and descriptive:
 - `User` extends Django's built-in user to add a `role`.
 - `WeeklyLog` captures what a student did each week plus a workflow `status`.
 
-Tip: Prefer docstrings and small inline comments here; put non-trivial business
-logic in services/helpers to keep models easy to reason about.
+
 """
 
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
-from .constants import (ROLE_CHOICES, LOG_STATUSES, PLACEMENT_STATUSES, EVAL_STATUSES, 
-                        VALID_PLACEMENT_TRANSITIONS, VALID_EVAL_TRANSITIONS, VALID_LOG_TRANSITIONS )
-
-
-from .constants import ROLE_CHOICES, LOG_STATUSES
-
+from .constants import (ROLE_CHOICES, LOG_STATUSES,
+                        PLACEMENT_STATUSES, 
+                        EVAL_STATUSES,
+                        VALID_PLACEMENT_TRANSITIONS, 
+                        VALID_EVAL_TRANSITIONS, 
+                        VALID_LOG_TRANSITIONS )
 
 class User(AbstractUser):
     """Custom user model.
@@ -36,11 +35,13 @@ class WeeklyLog(models.Model):
     """A single weekly internship log entry.
 
     Records what a student worked on in a given week and where that log is in the
-    review/approval workflow.
+    review or approval workflow.
     """
 
     # Which student this log belongs to.
-    student = models.ForeignKey(User, on_delete=models.CASCADE)
+    student = models.ForeignKey(User,
+    on_delete=models.CASCADE,
+    limit_choices_to={'role': 'STUDENT'})
 
     # Week number within the internship period (e.g., 1..12).
     week = models.IntegerField()
@@ -48,7 +49,7 @@ class WeeklyLog(models.Model):
     # Free-form summary of tasks completed this week.
     tasks = models.TextField()
     status = models.CharField(max_length=20, choices= LOG_STATUSES, default="Draft")
-    placement = models.ForeignKey('Placement', on_delete=models.CASCADE, null=True, blank=True, related_name='logs')
+    placement = models.ForeignKey('Placement', on_delete=models.SET_NULL, null=True, blank=True, related_name='logs')
     hours = models.FloatField(default=0)
 
     skills = models.TextField(blank=True)
@@ -66,14 +67,11 @@ class WeeklyLog(models.Model):
             self.submitted_at = timezone.now()
         self.save()
     
-    
-    def __str__(self):
-
-    # Workflow status (e.g., Draft/Submitted/Approved depending on `LOG_STATUSES`).
-    status = models.CharField(max_length=20, choices=LOG_STATUSES, default="Draft")
-
-    def __str__(self) -> str:
+    def __str__(self) :
         return f"Week {self.week} - {self.student.username} ({self.status})"
+    #this class tells django that the student and week combination must be unique and never duplicate
+    class Meta:
+        unique_together = ('student','week')
     
 class EvaluationForm(models.Model):
     placement = models.ForeignKey('Placement', on_delete=models.CASCADE, related_name='evaluations')
@@ -84,6 +82,7 @@ class EvaluationForm(models.Model):
     overall_comments = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=EVAL_STATUSES, default='Draft')
     created_at = models.DateTimeField(auto_now_add=True)
+    submitted_at = models.DateTimeField(null=True, blank=True)
 
     def change_status(self, new_status):
         validate_transition(self.status, new_status, VALID_EVAL_TRANSITIONS)
@@ -95,7 +94,7 @@ class EvaluationForm(models.Model):
     def __str__(self):
         return f"Evaluation for {self.placement} by {self.submitted_by} ({self.status})"        
 #This is a custom Exception class to handle invalid log transitions
-class invalidStateError(Exception):
+class InvalidStateError(Exception):
     """this is raised when a state transition is invalid""" 
     pass
 
@@ -103,7 +102,7 @@ class invalidStateError(Exception):
 def validate_transition(current_status, new_status, valid_transitions):
     allowed = valid_transitions.get(current_status, [])
     if new_status not in allowed:
-        raise invalidStateError(f"canot transition from {current_status} to {new_status} \n Allowed: {allowed}")
+        raise InvalidStateError(f"canot transition from {current_status} to {new_status} \n Allowed: {allowed}")
     
 class Placement(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='placements', limit_choices_to={'role':'STUDENT'} )
