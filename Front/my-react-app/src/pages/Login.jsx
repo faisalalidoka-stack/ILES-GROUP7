@@ -3,6 +3,7 @@ import { useState } from "react";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("student");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -50,9 +51,10 @@ function Login() {
       const response = await fetch("http://127.0.0.1:8000/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, role }), //  role added
       });
       const res = await response.json();
+      console.log("Login response:", res); //  debug log
       if (!response.ok) setError(res.message || "Login failed");
     } catch (err) {
       setError("Something went wrong. Try again.");
@@ -67,9 +69,37 @@ function Login() {
         <h2 style={{ textAlign: "center", color: "#2c3e50" }}>ILES System</h2>
         <p style={{ textAlign: "center", color: "#888" }}>Sign in to your account</p>
         {error && <p style={{ color: "red", textAlign: "center" }}>{error}</p>}
-        <input type="email" placeholder="Email" onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
-        <input type="password" placeholder="Password" onChange={(e) => setPassword(e.target.value)} style={inputStyle} />
-        <button onClick={handleLogin} disabled={loading} style={buttonStyle}>
+        
+        <input
+          type="email"
+          placeholder="Email"
+          onChange={(e) => setEmail(e.target.value)}
+          style={inputStyle}
+        />
+        
+        <input
+          type="password"
+          placeholder="Password"
+          onChange={(e) => setPassword(e.target.value)}
+          style={inputStyle}
+        />
+        
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          style={inputStyle}
+        >
+          <option value="student">Student</option>
+          <option value="workplace_supervisor">Workplace Supervisor</option>
+          <option value="academic_supervisor">Academic Supervisor</option>
+          <option value="admin">Admin</option>
+        </select>
+        
+        <button
+          onClick={handleLogin}
+          disabled={loading}
+          style={buttonStyle}
+        >
           {loading ? "Logging in..." : "Login"}
         </button>
       </div>
