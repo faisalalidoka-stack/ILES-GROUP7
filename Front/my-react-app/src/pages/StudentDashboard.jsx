@@ -14,7 +14,7 @@ function StudentDashboard()
     useEffect(() => {
         //if not logged in go back to login page
         if (!user) {
-            navigate('/login');
+            navigate('/');
             return;
         }
 

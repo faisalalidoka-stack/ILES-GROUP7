@@ -16,14 +16,30 @@ export const logOut = () => {localStorage.removeItem("iles_token"); localStorage
 // and also handles the response and retuns a parsed json object or throws an error if the response is not ok
 async function apiFetch(path, options = {}) {
     const token = getToken();
+    const { skipAuth, ...fetchOptions } = options;
     const headers = {
         "Content-Type": "application/json",
-        ...(token ? {Authorization: `Bearer ${token}`} : {}),
-        ...options.headers,
+        //i first suffered with this
+        //because i aws attaching the token to the header of login request which was causing failure 
+        //so i needed to add skipAuth option to allow a login request to be sent without first checjikng for a token 
+        //and for the requests where the token exists it will be attached for authentication
+        ...(!skipAuth && token ? { Authorization: `Bearer ${token}` } : {}),
+        ...fetchOptions.headers,
     };
-    const response = await fetch(`${BASE_URL}${path}`, {...options, headers});
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || data.error || "The request failed");
+    const response = await fetch(`${BASE_URL}${path}`, { ...fetchOptions, headers });
+
+    let data = null;
+    try {
+        data = await response.json();
+    } catch {
+        // non-JSON response (e.g., HTML error page)
+    }
+
+    if (!response.ok) {
+        throw new Error(
+            data?.message || data?.error || `Request failed (${response.status})`
+        );
+    }
     return data; 
 
 }
@@ -33,6 +49,7 @@ export async function loginUser({email, password, role}) {
   return apiFetch('/login/',{
     method: 'POST',
     body: JSON.stringify({email, password, role}),
+    skipAuth: true, // don't attach a possibly-expired token to login
   });
 }
 
