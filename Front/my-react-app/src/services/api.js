@@ -29,10 +29,10 @@ async function apiFetch(path, options = {}) {
 }
 
 // now the authentiaction functions
-export async function loginUser({email, password}) {
+export async function loginUser({email, password, role}) {
   return apiFetch('/login/',{
     method: 'POST',
-    body: JSON.stringify({email, password}),
+    body: JSON.stringify({email, password, role}),
   });
 }
 
