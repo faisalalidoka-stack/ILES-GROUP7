@@ -20,6 +20,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 from internship.views import (
+    RegisterView,ForgotPasswordView, 
     LoginView,
     PlacementListView, PlacementDetailView,
     WeeklyLogListView, WeeklyLogDetailView,
@@ -29,6 +30,10 @@ from internship.views import (
 urlpatterns = [
     path('admin/', admin.site.urls),
     #for authentiction
+    #i decided to add the forgot password and regiater views here
+    #because they are related to the user management and auth process
+    path('register/', RegisterView.as_view(), name='register'),
+    path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
     path('login/', LoginView.as_view(), name='login'),
     #fro the placements
     path('placements/', PlacementListView.as_view(), name='placement-list'),
