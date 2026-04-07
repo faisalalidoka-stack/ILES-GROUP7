@@ -1,24 +1,40 @@
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from internship.models import User 
 def login_user(email,password):
-    #Authenticate user
-    user = authenticate(username=email, password=password)
-    #Handle invalid credentials
-if user is not None:
-    return{
-        "success": false,
-        "error": "Invalid credentials"
-    }
-    #Generate JWT token
+    #im first trying to find the user by their email
+    try:
+        user_object = User.objects.get(email=email)
+        username = user_object.username
+    #of course there is a possibility of the user not existing    
+    except User.DoesNotExist:
+        return {
+            "success": False, #i set success to false then return error
+            "error" : "Invalid credentials",
+        }
+    
+    #i now authenticate with the username and pasword 
+    #this feature comes with djang
+    user = authenticate(username=username, password=password)
+
+    if user is None:
+        return {
+            "success": False,
+            "error": "Invalid credentials",
+        }
+    
+    #i now generate the actual JWT tokens
     refresh = RefreshToken.for_user(user)
     access_token = str(refresh.access_token)
-    #Return user data and token
+
+    #how it looks like
     return {
-        "success": true,
+        "success": True,
         "user": {
             "id": user.id,
             "email": user.email,
-            "role": user.role
+            "role": user.role,
         },
-        "token": access_token
+        "token": access_token,
     }
+
