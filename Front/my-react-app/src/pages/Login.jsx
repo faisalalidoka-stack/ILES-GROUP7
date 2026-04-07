@@ -60,7 +60,7 @@ function Login() {
 
     try {
       //Sends login request to backend
-      const data = await loginUser(email, password, role);
+      const data = await loginUser({email, password, role});
 
       //login fails then show error message
       if (!data.success){
