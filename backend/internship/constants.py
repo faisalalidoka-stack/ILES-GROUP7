@@ -24,8 +24,6 @@ ROLE_CHOICES = [
     ("INTERNSHIP_ADMIN", "Internship Admin"),
 ]
 
-<<<<<<< HEAD
-=======
 #thse are the log steps that a submitted log follows
 
 LOG_STATUSES = [
@@ -73,4 +71,3 @@ VALID_PLACEMENT_TRANSITIONS = {
     "Rejected": [],
     "Completed": []
 }
->>>>>>> 3c95f14d43d1fb916203cfac2987062f50400aa8
