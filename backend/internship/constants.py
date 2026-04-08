@@ -24,3 +24,53 @@ ROLE_CHOICES = [
     ("INTERNSHIP_ADMIN", "Internship Admin"),
 ]
 
+<<<<<<< HEAD
+=======
+#thse are the log steps that a submitted log follows
+
+LOG_STATUSES = [
+    ('Draft','Draft'),
+    ('Submitted','Submitted'),
+    ('Approved','Approved'),
+    ('Rejected','Rejected'),
+
+]
+
+#these are the steps that a placement for a student follows
+PLACEMENT_STATUSES = [
+    ('Pending', 'Pending'),
+    ('Active','Active'),
+    ('Rejected','Rejected'),
+    ('Completed','Completed'),
+]
+
+
+#thses are the valid transitions for the weekly log transitions not here arent allowed
+VALID_LOG_TRANSITIONS = {
+
+    "Draft": ["Submitted"],
+    "Submitted": ["Approved", "Rejected"],
+    "Rejected": ["Draft"],
+    "Approved": []
+}
+
+EVAL_STATUSES = [
+    ('Draft', 'Draft'),
+    ('Submitted', 'Submitted'),
+    ('Reviewed', 'Reviewed'),
+]
+
+VALID_EVAL_TRANSITIONS = {
+    "Draft": ["Submitted"],
+    "Submitted": ["Reviewed"],
+    "Reviewed": []
+}
+
+
+VALID_PLACEMENT_TRANSITIONS = {
+    "Pending": ["Active", "Rejected"],
+    "Active": ["Completed"],
+    "Rejected": [],
+    "Completed": []
+}
+>>>>>>> 3c95f14d43d1fb916203cfac2987062f50400aa8

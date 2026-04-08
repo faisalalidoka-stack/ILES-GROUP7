@@ -16,7 +16,34 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
 
+from internship.views import (
+    LoginView,
+    PlacementListView, PlacementDetailView,
+    WeeklyLogListView, WeeklyLogDetailView,
+    EvaluationListView, FinalGradeView,
+)
+#this is for admin as always
 urlpatterns = [
     path('admin/', admin.site.urls),
-]
+    #for authentiction
+    path('login/', LoginView.as_view(), name='login'),
+    #fro the placements
+    path('placements/', PlacementListView.as_view(), name='placement-list'),
+    #and fo the details of the placemnt
+    path('placements/<int:pk>/', PlacementDetailView.as_view(), name='placement-detail'),
+
+    #now the weekly logs
+    path('logs/', WeeklyLogListView.as_view(), name='weeklylog-list'),
+    #and their details
+    path('logs/<int:pk>/', WeeklyLogDetailView.as_view(), name='weeklylog-detail'),
+
+    #for the evaluations
+    path('evaluations/', EvaluationListView.as_view(), name='evaluation-list'),
+
+    #now the final grade
+    path('grades/', FinalGradeView.as_view(), name='final-grade'),
+
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
