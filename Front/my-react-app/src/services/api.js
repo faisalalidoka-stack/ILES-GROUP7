@@ -79,7 +79,26 @@ export const createEvaluation = (data) => apiFetch('/evaluations/', {
 
 
 //grades now
-export const getGrades = () => apiFetch('/grades/');    
+export const getGrades = () => apiFetch('/grades/');
+
+export async function registerUser({ username, email, password, confirmPassword, role}) {
+    return apiFetch("/register/", {
+    method: "POST",
+    body: JSON.stringify({ username, email, password,
+      confirm_password: confirmPassword, role }),
+  });
+}
+
+export async function forgotPassword({ email, newPassword, confirmPassword }) {
+  return apiFetch("/forgot-password/", {
+    method: "POST",
+    body: JSON.stringify({ email,
+      new_password: newPassword,
+      confirm_password: confirmPassword }),
+  });
+}
+ 
+
 
 
     

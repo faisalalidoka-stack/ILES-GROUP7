@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";import StudentDashboard from "./pages/StudentDashboard";
+import Login from "./pages/Login";
+import StudentDashboard from "./pages/StudentDashboard";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import WorkplaceSupervisorDashboard from "./pages/WorkplaceSupervisorDashboard";
