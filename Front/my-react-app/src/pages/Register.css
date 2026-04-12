@@ -1,0 +1,96 @@
+/* Register.css – styling for the Sign Up page */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a2d52 0%, #0d7c8f 100%);
+}
+
+.auth-box {
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 14px;
+  width: 380px;
+  box-shadow: 0 8px 32px rgba(13, 124, 143, 0.18);
+}
+
+.auth-box h2 {
+  text-align: center;
+  color: #1a2d52;
+  margin-bottom: 0.25rem;
+}
+
+.auth-subtitle {
+  text-align: center;
+  color: #888;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.auth-input {
+  width: 100%;
+  padding: 10px 12px;
+  margin: 6px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: #0d7c8f;
+  box-shadow: 0 0 0 3px rgba(13, 124, 143, 0.12);
+}
+
+.auth-btn {
+  width: 100%;
+  padding: 11px;
+  margin-top: 10px;
+  background: linear-gradient(90deg, #0d7c8f 0%, #1a2d52 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.auth-btn:hover {
+  opacity: 0.9;
+}
+
+.auth-btn.disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+.auth-link {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.875rem;
+  color: #555;
+}
+
+.auth-link a {
+  color: #0d7c8f;
+  text-decoration: none;
+}
+
+.auth-link a:hover {
+  text-decoration: underline;
+}
+
+.error-msg {
+  color: #c0392b;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.success-msg {
+  color: #27ae60;
+  text-align: center;
+  font-size: 0.875rem;
+}

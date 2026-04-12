@@ -44,12 +44,26 @@ async function apiFetch(path, options = {}) {
 
 }
 
-// now the authentiaction functions
+// now the authentiaction functions...Login -accepts {email,password}
 export async function loginUser({email, password, role}) {
   return apiFetch('/login/',{
     method: 'POST',
     body: JSON.stringify({email, password, role}),
     skipAuth: true, // don't attach a possibly-expired token to login
+  });
+}
+
+//Register...accepts {username,email,password,confirmPassword,role}  I almost died looking for where to implement this coz i was working in a wrong file.
+export async function registerUser({ username, email, password, confirmPassword, role }) {
+  return apiFetch("/register/", {
+    method: "POST",
+    body: JSON.stringify({
+      username,
+      email,
+      password,
+      confirm_password: confirmPassword,
+      role,
+    }),
   });
 }
 

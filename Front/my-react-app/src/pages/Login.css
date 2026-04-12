@@ -1,0 +1,71 @@
+/*These are the designs for the Login.jsx file on the Login page. It includes styling for the login form, input fields, buttons, and error messages. The styles are designed to create a clean and user-friendly interface for users to log in to the application.*/
+.login-container {
+    display:flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color:skyblue;
+}
+
+.login-box {
+    background-color: rgb(247, 243, 243);
+    padding: 2rem;
+    border-radius: 12px;
+    width: 350px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.login-box h2 {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    
+}
+
+.login-box p {
+  text-align: center;
+  color: #555;
+  margin-top:0;
+  margin-bottom: 1.5rem;
+}
+
+.error-message {
+  color: red;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+
+.input-field {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0 ;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  display:block;
+  
+}
+
+.login-button {
+  width: 100%;
+  padding:10px;
+  background-color: #223f5b;
+  color: peachpuff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size : 16px;
+  margin-top: 10px;
+  
+}
+
+.login-button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+
+
