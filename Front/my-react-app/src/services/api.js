@@ -1,3 +1,4 @@
+// src/services/api.js
 const BASE_URL = "http://127.0.0.1:8000";
 
 //the token helpers first
@@ -44,7 +45,7 @@ async function apiFetch(path, options = {}) {
 
 }
 
-// now the authentiaction functions
+// now the authentiaction functions...Login -accepts {email,password}
 export async function loginUser({email, password, role}) {
   return apiFetch('/login/',{
     method: 'POST',
@@ -52,6 +53,27 @@ export async function loginUser({email, password, role}) {
     skipAuth: true, // don't attach a possibly-expired token to login
   });
 }
+
+//Register...accepts {username,email,password,confirmPassword,role}  I almost died looking for where to implement this coz i was working in a wrong file.
+export async function registerUser({ username, email, password, confirmPassword, role }) {
+  return apiFetch("/register/", {
+    method: "POST",
+    body: JSON.stringify({
+      username,
+      email,
+      password,
+      confirm_password: confirmPassword,
+      role,
+    }),
+  });
+}
+
+export async function forgotPassword({ email, new_password, confirm_password }) {
+  return apiFetch("/forgot-password/", {
+    method: "POST",
+    body: JSON.stringify({ email, new_password, confirm_password }),
+  });
+}   //now this is the forgot password function that accepts email, new password and confirm password and sends it to the backend to handle the password reset process. Merge conflicts are real...i had not placed this function in real time .
 
 //now the plcements
 export const getPlacements = () => apiFetch('/placements/');
@@ -78,7 +100,26 @@ export const createEvaluation = (data) => apiFetch('/evaluations/', {
 
 
 //grades now
-export const getGrades = () => apiFetch('/grades/');    
+export const getGrades = () => apiFetch('/grades/');
+
+export async function registerUser({ username, email, password, confirmPassword, role}) {
+    return apiFetch("/register/", {
+    method: "POST",
+    body: JSON.stringify({ username, email, password,
+      confirm_password: confirmPassword, role }),
+  });
+}
+
+export async function forgotPassword({ email, newPassword, confirmPassword }) {
+  return apiFetch("/forgot-password/", {
+    method: "POST",
+    body: JSON.stringify({ email,
+      new_password: newPassword,
+      confirm_password: confirmPassword }),
+  });
+}
+ 
+
 
 
     
