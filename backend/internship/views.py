@@ -78,9 +78,9 @@ class PlacementDetailView(APIView):
             try :
                 obj.change_status(new_status)
             except Exception as e:
-                return Response({'error':'str(e)'}, status=400)
+                return Response({'error':str(e)}, status=400)
         s = PlacementSerializer(obj, data=request.data, partial=True)
-        if s.is_valid:
+        if s.is_valid():
             s.save()
         return Response(PlacementSerializer(obj).data) 
 
@@ -97,7 +97,7 @@ class WeeklyLogListView(APIView):
             )
         elif role == 'WORKPLACE_SUPERVISOR':
             qs = WeeklyLog.objects.filter(
-                placement_workplace_supervisor=request.user
+                placement__workplace_supervisor=request.user
             )
         else:
             qs = WeeklyLog.objects.all()
@@ -116,7 +116,7 @@ class WeeklyLogDetailView(APIView):
 
     def get_object(self, pk):
         try:
-            return WeeklyLog.objaects.get(pk=pk)
+            return WeeklyLog.objects.get(pk=pk)
         except WeeklyLog.DoesNotExist:
             return None
 
