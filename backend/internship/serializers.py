@@ -1,6 +1,26 @@
 from rest_framework import serializers
 from .models import User, Placement, WeeklyLog, EvaluationForm, FinalGrade
 
+class RegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=8)
+    confirm_password = serializers.CharField(write_only=True)
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'password', 'confirm_password', 'role']
+        def validate(self, data):
+            if data['password'] != data['confirm_password']:
+                raise serializers.ValidationError(
+                    {"confirm password": "Passwords do not match."})
+                  return data
+            def create(self, validated_data):
+                validated_data.pop('confirm_password')  # Remove confirm_password before creating the user
+                return User.objects.create_user(
+                    username=validated_data['username'],
+                    email=validated_data['email'],
+                    password=validated_data['password'],
+                    role=validated_data.get['role', 'STUDENT'],
+                )
+
 #firrst the users serializer
 class UserSerializer(serializers.ModelSerializer):
     class Meta: #this is an inner class i use to provide meta data or configuration data about the main class
@@ -8,7 +28,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id','username','email','role']
         #im not including the password fied coz this would expose it 
 
-#now the placement seri
+#now the placement serializer
 class PlacementSerializer(serializers.ModelSerializer):
     #ive decided to craerte a readonly nested under the user info so front end gets names not just ids
     student = UserSerializer(read_only=True) 
@@ -42,9 +62,7 @@ class WeeklyLogSerializer(serializers.ModelSerializer):
     class Meta:
         model= WeeklyLog
         fields = '__all__'
-        read_only_fields = [
-            'student', 'status', 'submitted_at', 'created_at', 'updated_at'
-        ]        
+        read_only_fields = [ 'student', 'status', 'submitted_at', 'created_at', 'updated_at']        
 
 #now eavluation form seri
 class EvaluationFormSerializer(serializers.ModelSerializer):
@@ -57,8 +75,8 @@ class EvaluationFormSerializer(serializers.ModelSerializer):
             'submitted_by', 'status', 'submtted_at', 'created_at'
         ]
 
-#finally fianl grade seri 
+#finally final grade serializers 
 class FinalGradeSerializer(serializers.ModelSerializer):
-    class Mata:
+    class Meta:
         model = FinalGrade 
         fields = '__all__'      
