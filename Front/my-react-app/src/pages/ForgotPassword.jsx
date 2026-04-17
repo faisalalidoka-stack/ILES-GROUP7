@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { forgotPassword } from "../api";
+import { forgotPassword } from "../services/api"; //this is our new updated path
 import { Link } from "react-router-dom";
 
 export default function ForgotPassword() {

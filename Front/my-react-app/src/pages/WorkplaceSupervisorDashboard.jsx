@@ -1,6 +1,6 @@
 import Navbar from "../components/Navbar";
 import { useState, useEffect } from "react";
-import { getPlacements, getWeeklyLogs, updateWeeklyLog } from "../api";
+import { getPlacements, getWeeklyLogs, updateWeeklyLog } from "../services/api";
 
 export default function WorkplaceSupervisorDashboard() {
   const [placements, setPlacements] = useState([]);

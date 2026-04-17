@@ -1,6 +1,6 @@
 import Navbar from "../components/Navbar";
 import { useState, useEffect } from "react";
-import { getPlacements, updatePlacement } from "../api";
+import { getPlacements, updatePlacement } from "../services/api";
 
 export default function AdminDashboard() {
   const [placements, setPlacements] = useState([]);
