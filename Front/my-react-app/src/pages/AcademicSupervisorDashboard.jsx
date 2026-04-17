@@ -1,6 +1,6 @@
 import Navbar from "../components/Navbar";
 import { useState, useEffect } from "react";
-import { getPlacements, getWeeklyLogs, getGrades } from "../api";
+import { getPlacements, getWeeklyLogs, getGrades } from "../services/api";
 
 export default function AcademicSupervisorDashboard() {
   const [placements, setPlacements] = useState([]);
