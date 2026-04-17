@@ -15,7 +15,7 @@ export default function AcademicSupervisorDashboard() {
 
   return (
     <div>
-      <Navbar />
+       <Navbar /> 
       <h2>Academic Supervisor Dashboard</h2>
       {placements.map(p => (
         <div key={p.id}>
