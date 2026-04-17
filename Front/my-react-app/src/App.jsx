@@ -15,8 +15,8 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/student" element={<StudentDashboard />} />
-        <Route path="/supervisor" element={<WorkplaceSupervisorDashboard />} />
-        <Route path="/academic" element={<AcademicSupervisorDashboard />} />
+        <Route path="/workplace-supervisor" element={<WorkplaceSupervisorDashboard />} />
+        <Route path="/academic-supervisor" element={<AcademicSupervisorDashboard />} />
         <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
     </BrowserRouter>
