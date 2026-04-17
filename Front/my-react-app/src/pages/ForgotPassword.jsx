@@ -1,61 +1,34 @@
-// src/pages/ForgotPassword.jsx
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { forgotPassword } from '../services/api';
-import './Register.css';
+import { useState } from "react";
+import { forgotPassword } from "../services/api"; //this is our new updated path
+import { Link } from "react-router-dom";
 
-function ForgotPassword() {
+export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const navigate = useNavigate();
+  const [message, setMessage] = useState("");
 
-  const handleReset = async () => {
-    setLoading(true); setError(""); setSuccess("");
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match."); setLoading(false); return;
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     try {
-      const data = await forgotPassword({ email, newPassword, confirmPassword });
-      if (!data.success) { setError(data.error || "Reset failed"); return; }
-      setSuccess("Password reset! Redirecting to login...");
-      setTimeout(() => navigate("/"), 1500);
+      await forgotPassword({ email, newPassword, confirmPassword });
+      setMessage("Password reset successful!");
     } catch (err) {
-      setError(err.message || "Something went wrong");
-    } finally { setLoading(false); }
+      setMessage("Something went wrong. Try again.");
+    }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-box">
-        <h2>Reset Password</h2>
-        <p className="auth-subtitle">
-          Enter your registered email and choose a new password.
-        </p>
-        {error && <p className="error-msg">{error}</p>}
-        {success && <p className="success-msg">{success}</p>}
-        <input type="email" placeholder="Registered Email"
-          className="auth-input"
-          onChange={(e) => setEmail(e.target.value)} />
-        <input type="password" placeholder="New Password (min 8 chars)"
-          className="auth-input"
-          onChange={(e) => setNewPassword(e.target.value)} />
-        <input type="password" placeholder="Confirm New Password"
-          className="auth-input"
-          onChange={(e) => setConfirmPassword(e.target.value)} />
-        <button className={'auth-btn ${loading ? "disabled" : ""}'}
-          onClick={handleReset} disabled={loading}>
-          {loading ? "Resetting..." : "Reset Password"}
-        </button>
-        <p className="auth-link">
-          Remember your password? <Link to="/">Login</Link>
-        </p>
-      </div>
+    <div>
+      <h2>Forgot Password</h2>
+      <form onSubmit={handleSubmit}>
+        <input placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+        <input type="password" placeholder="New Password" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
+        <input type="password" placeholder="Confirm Password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
+        <button type="submit">Reset Password</button>
+      </form>
+      {message && <p>{message}</p>}
+      <Link to="/">Back to Login</Link>
     </div>
   );
 }
-
-export default ForgotPassword;
