@@ -148,9 +148,9 @@ class EvaluationListView(APIView):
 
     def get(self, request):
         qs = EvaluationForm.objects.filter(
-            Placement_workplace_supervisor=request.user
+            placement__workplace_supervisor=request.user
         )
-        return Response(EvaluationFormSerializer(qs, mant=True).data)
+        return Response(EvaluationFormSerializer(qs, many=True).data)
         
     def post(self, request):
         s = EvaluationFormSerializer(data=request.data)
@@ -165,7 +165,7 @@ class FinalGradeView(APIView):
 
     def get(self, request):
         qs = FinalGrade.objects.filter(
-            Placement_student=request.user,
+            placement__student=request.user,
             published=True
         )       
         return Response(FinalGradeSerializer(qs, many=True).data)
