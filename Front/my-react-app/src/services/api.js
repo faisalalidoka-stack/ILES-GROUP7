@@ -58,16 +58,30 @@ export async function registerUser({ username, email, password, confirmPassword,
             role,
         }),
     });
+
 }
 
-export async function forgotPassword({ email, newPassword, confirmPassword }) {
-    return apiFetch("/forgot-password/", {
+
+
+//i have split the forgot password functionality into two steps to match the backend implementation
+export async function requestPasswordReset({ email }) {
+    return apiFetch("/auth/password-reset-request/", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+        skipAuth: true, 
+    });
+}
+//this is the second step where the user submits the new password along with the uid and token they received in their email
+export async function confirmPasswordReset({ uid, token, newPassword, confirmPassword }) {
+    return apiFetch("/auth/password-reset-confirm/", {
         method: "POST",
         body: JSON.stringify({ 
-            email, 
+            uid, 
+            token, 
             new_password: newPassword, 
             confirm_password: confirmPassword 
         }),
+        skipAuth: true, 
     });
 }
 

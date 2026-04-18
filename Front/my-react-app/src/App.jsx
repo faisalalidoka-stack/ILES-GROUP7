@@ -14,6 +14,8 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        //here i have added the route for the new reset password functionality
+        <Route path="/reset-password/:uid/:token" element={<ResetPasswordConfirm />} />
         <Route path="/student" element={<StudentDashboard />} />
         <Route path="/workplace-supervisor" element={<WorkplaceSupervisorDashboard />} />
         <Route path="/academic-supervisor" element={<AcademicSupervisorDashboard />} />
