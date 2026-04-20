@@ -40,8 +40,8 @@ function Login() {                               // component (login)
   // defines where each role should be redirected
       const roleRoutes = {
        STUDENT: '/student',
-       WORKPLACE_SUPERVISOR: '/supervisor',
-       ACADEMIC_SUPERVISOR: '/academic',
+       WORKPLACE_SUPERVISOR: '/workplace-supervisor',
+       ACADEMIC_SUPERVISOR: '/academic-supervisor',
        INTERNSHIP_ADMIN: '/admin',
 };     
 
