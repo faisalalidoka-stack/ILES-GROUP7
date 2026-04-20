@@ -113,6 +113,8 @@ class Placement(models.Model):
     end_date = models.DateField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=PLACEMENT_STATUSES, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)
+    #deadline enforcemennt
+    deadline = models.DateField(null=True, blank=True)
 
     def change_status(self, new_status):
         validate_transition(self.status, new_status, VALID_PLACEMENT_TRANSITIONS)
@@ -134,3 +136,6 @@ class FinalGrade(models.Model):
     def __str__(self):
         return f"Grade for {self.placement.student.username} : {self.grade_letter}"       
 
+
+    
+    
