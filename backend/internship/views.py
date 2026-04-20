@@ -1,5 +1,6 @@
 from django.shortcuts import render
 
+from .permsissions import IsStudentOnly, IsWorkplaceSupervisorOnly, IsAcademicSupervisorOnly
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -265,3 +266,11 @@ class ConfirmPasswordResetView(APIView):
             return Response({'success': True, 'message': 'Password reset successful'}, status=200)
         
         return Response({'error': 'The reset link is invalid or has expired please try again.'}, status=400)
+    
+class WeeklyLogListView(APIView):
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated(), IsStudentOnly()]
+            return [IsAuthenticated()]
+        
+        
