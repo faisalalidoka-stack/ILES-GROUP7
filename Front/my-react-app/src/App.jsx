@@ -3,10 +3,11 @@ import Login from "./pages/Login";
 import StudentDashboard from "./pages/StudentDashboard";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPasswordConfirm from "./pages/ResetPasswordConfirm"; // new import from main
 import WorkplaceSupervisorDashboard from "./pages/WorkplaceSupervisorDashboard";
 import AcademicSupervisorDashboard from "./pages/AcademicSupervisorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
-import ProtectedRoute from "./components/ProtectedRoute"; // 👈 added route guard
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:uid/:token" element={<ResetPasswordConfirm />} />
 
         {/* Protected dashboard routes – only accessible when logged in with correct role */}
         <Route
@@ -27,7 +29,7 @@ function App() {
           }
         />
         <Route
-          path="/supervisor"
+          path="/workplace-supervisor"
           element={
             <ProtectedRoute allowedRoles={["WORKPLACE_SUPERVISOR"]}>
               <WorkplaceSupervisorDashboard />
@@ -35,7 +37,7 @@ function App() {
           }
         />
         <Route
-          path="/academic"
+          path="/academic-supervisor"
           element={
             <ProtectedRoute allowedRoles={["ACADEMIC_SUPERVISOR"]}>
               <AcademicSupervisorDashboard />

@@ -91,11 +91,21 @@ export async function registerUser({ username, email, password, confirmPassword,
     });
 }
 
-export async function forgotPassword({ email, newPassword, confirmPassword }) {
-    return apiFetch("/forgot-password/", {
+// --- Two-step Password Reset (forgot password) ---
+export async function requestPasswordReset({ email }) {
+    return apiFetch("/auth/password-reset-request/", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+        skipAuth: true,
+    });
+}
+
+export async function confirmPasswordReset({ uid, token, newPassword, confirmPassword }) {
+    return apiFetch("/auth/password-reset-confirm/", {
         method: "POST",
         body: JSON.stringify({
-            email,
+            uid,
+            token,
             new_password: newPassword,
             confirm_password: confirmPassword,
         }),
