@@ -114,3 +114,45 @@
 .reject-btn:hover {
   background-color: #c82333;
 }
+
+.logout-btn {
+  color:white;
+  background-color: #dc3545;
+  border:none;
+  border-radius: 6px;
+  float:right;
+  cursor:pointer;
+  padding:8px 16px;
+  margin:10px;
+}
+
+/* Logout button */
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+
+.logout-btn:hover {
+  background-color: #c82333;
+}
+
+/* Loading and error states (if not already present) */
+.loading, .error {
+  text-align: center;
+  margin-top: 2rem;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.loading {
+  background-color: #e3f2fd;
+  color: #0277bd;
+}
+
+.error {
+  background-color: #ffebee;
+  color: #c62828;
+}

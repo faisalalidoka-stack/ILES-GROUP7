@@ -1,16 +1,13 @@
 import { useState } from "react"; // We are calling react hook (useState) to remember our user Input which is triggered by onChange event in the input field.
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; //useNavigate hook enables navigation to diff pages after succesful login based on user role.
 import { loginUser, saveToken, saveUser } from "../services/api";
 import "./Login.css"; // Importing CSS for styling 
  
-    
-
-
-  //these are the state variables to store user input and ui status
+//these are the state variables to store user input and ui status
 function Login() {                               // component (login)
   const [email, setEmail] = useState("");        // State variable to store email,with email as a variable and setEmail as a function to update it,initially empty string
   const [password, setPassword] = useState("");  // State variable to store password
-  const [role, setRole] = useState("student");   // State variable to store role with default value "student"
+  const [role, setRole] = useState("STUDENT");   // State variable to store role with default value "student"
   const [loading, setLoading] = useState(false); // State variable to show loading state
   const [error, setError] = useState("");        // State variable to store error messages
 
@@ -23,13 +20,10 @@ function Login() {                               // component (login)
     setLoading(true);   //show loading state
     setError("");       //clears previous errors
 
-    try {
-      //Sends login request to backend
-      const data = await loginUser({email, password, role});
-
-      //login fails then show error message
-      if (!data.success){
-        setError(data.error || "Login failed");
+    try {               //try, this is used to handle any errors I can think of that might happen during Login process, they will be caught in catch block.
+      const data = await loginUser({email, password, role}); // data is response from backend after sent login request by functionLoginUser, await waits for task of LoginUser to finish then go to nxt code line.
+      if (!data.success){ 
+        setError(data.error || "Login failed");   //login fails then show error message
         return;
       }
 
@@ -83,7 +77,7 @@ function Login() {                               // component (login)
           
         /> 
 
-        <p>You are typing: {email}</p> 
+       
         
         {/* the Password input */}
         <input 
@@ -121,3 +115,20 @@ function Login() {                               // component (login)
 }
 
 export default Login;
+
+
+/*import-brings code from other files
+useState-a react hook-a special function that lets your components remember data
+useNavigate-areact hook,it allows me to change the URL, e.g to studentsdashboard after login
+LoginUser,saveToken,saveUser-are function written in api.js-handle login request and store response
+Login.css -applying style to this component-component is a function that returns jsx which is a building block of a page
+
+State declaration-A state declaration is a way to create a variable that can changeovertime and after a change it makes the componentbring a new value to UI
+const [email, setEmail] = useState("");
+Here email is a variable holding current email, setEmail is a function, it updates email, when called it re-renders the component with new value of email.
+
+const handleLogin = async () => {
+This is the login handling function when user clicks login button, asnyc is a keyword that give us ability to work with a promise-based function like loginUser,
+it allows us to write code that will wait for loginUser to work,give response beforemoving to next line, this enables us handle response well.
+setLoading, this is*/
+

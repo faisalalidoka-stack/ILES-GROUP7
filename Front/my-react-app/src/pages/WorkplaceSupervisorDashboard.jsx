@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
-import { getWeeklyLogs, updateWeeklyLog } from '../services/api';
-import './WorkplaceSupervisorDashboard.css';  // we'll create this next
+import { useNavigate } from 'react-router-dom';
+import { getWeeklyLogs, updateWeeklyLog, logOut } from '../services/api';
+import './WorkplaceSupervisorDashboard.css';
 
 function WorkplaceSupervisorDashboard() {
-  // State variables
-  const [logs, setLogs] = useState([]);        // stores the list of logs
-  const [loading, setLoading] = useState(true); // true while fetching
-  const [error, setError] = useState('');       // error message if any
-  const [comment, setComment] = useState({});   // stores comment for each log (key = log id)
+  const navigate = useNavigate();
 
-  // Fetch logs when the component first loads
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [comment, setComment] = useState({});
+
   useEffect(() => {
     fetchLogs();
   }, []);
@@ -28,17 +29,14 @@ function WorkplaceSupervisorDashboard() {
     }
   };
 
-  // Handle approve/reject
   const handleReview = async (logId, decision) => {
     const currentComment = comment[logId] || '';
     try {
       await updateWeeklyLog(logId, {
-        status: decision,           // 'APPROVED' or 'REJECTED'
+        status: decision,
         supervisor_comment: currentComment,
       });
-      // Refresh the list to show updated status
       fetchLogs();
-      // Clear comment for this log
       setComment(prev => ({ ...prev, [logId]: '' }));
     } catch (err) {
       setError(`Failed to ${decision} log. Try again.`);
@@ -50,12 +48,20 @@ function WorkplaceSupervisorDashboard() {
     setComment(prev => ({ ...prev, [logId]: value }));
   };
 
+  const handleLogout = () => {
+    logOut();
+    navigate('/');
+  };
+
   if (loading) return <div className="loading">Loading logs...</div>;
   if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="dashboard-container">
-      <h2>Workplace Supervisor Dashboard</h2>
+      <div className="dashboard-header">
+        <h2>Workplace Supervisor Dashboard</h2>
+        <button className="logout-btn" onClick={handleLogout}>Logout</button>
+      </div>
       <p>Review weekly logs from your assigned students.</p>
 
       {logs.length === 0 ? (
