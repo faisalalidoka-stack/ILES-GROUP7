@@ -1,129 +1,149 @@
 // src/services/api.js
 const BASE_URL = "http://127.0.0.1:8000";
 
-//the token helpers first
-
-/*this is a memory manager for the front end when someone logs in their token is kept in local storage 
-to keep them logged in and when they log out their token is removed and all their information is cleared */
+// --- Token & User Helpers ---
 export const saveToken = (token) => localStorage.setItem("iles_token", token);
 export const getToken = () => localStorage.getItem("iles_token");
 export const saveUser = (user) => localStorage.setItem("iles_user", JSON.stringify(user));
 export const getUser = () => JSON.parse(localStorage.getItem("iles_user")) || null;
-export const logOut = () => {localStorage.removeItem("iles_token"); localStorage.removeItem("iles_user")};
+export const logOut = () => {
+    localStorage.removeItem("iles_token");
+    localStorage.removeItem("iles_user");
+    localStorage.removeItem("iles_refresh"); // also clear refresh token on logout
+};
 
-
-//now for the core fetch wrapper
-// this automatically adds the token to the header of every request if it exists 
-// and also handles the response and retuns a parsed json object or throws an error if the response is not ok
-async function apiFetch(path, options = {}) {
+// --- Core Fetch Wrapper with Token Refresh ---
+async function apiFetch(path, options = {}, isRetry = false) {
     const token = getToken();
     const { skipAuth, ...fetchOptions } = options;
     const headers = {
         "Content-Type": "application/json",
-        //i first suffered with this
-        //because i aws attaching the token to the header of login request which was causing failure 
-        //so i needed to add skipAuth option to allow a login request to be sent without first checjikng for a token 
-        //and for the requests where the token exists it will be attached for authentication
         ...(!skipAuth && token ? { Authorization: `Bearer ${token}` } : {}),
         ...fetchOptions.headers,
     };
+
     const response = await fetch(`${BASE_URL}${path}`, { ...fetchOptions, headers });
+
+    // If 401 Unauthorized and not already retrying, try to refresh the token
+    if (response.status === 401 && !isRetry && !skipAuth) {
+        const refreshToken = localStorage.getItem("iles_refresh");
+        if (refreshToken) {
+            try {
+                const refreshResponse = await fetch(`${BASE_URL}/token/refresh/`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ refresh: refreshToken }),
+                });
+                if (refreshResponse.ok) {
+                    const { access } = await refreshResponse.json();
+                    saveToken(access);
+                    // Retry the original request with the new token
+                    return apiFetch(path, options, true);
+                }
+            } catch (err) {
+                console.error("Token refresh failed", err);
+            }
+        }
+        // Refresh failed – force logout and redirect to login
+        logOut();
+        window.location.href = "/";
+        throw new Error("Session expired. Please log in again.");
+    }
 
     let data = null;
     try {
         data = await response.json();
     } catch {
-        // non-JSON response (e.g., HTML error page)
+        // non-JSON response
     }
 
     if (!response.ok) {
-        throw new Error(
-            data?.message || data?.error || `Request failed (${response.status})`
-        );
+        throw new Error(data?.message || data?.error || `Request failed (${response.status})`);
     }
-    return data; 
-
+    return data;
 }
 
-// now the authentiaction functions...Login -accepts {email,password}
-export async function loginUser({email, password, role}) {
-  return apiFetch('/login/',{
-    method: 'POST',
-    body: JSON.stringify({email, password, role}),
-    skipAuth: true, // don't attach a possibly-expired token to login
-  });
+// --- Authentication Functions ---
+export async function loginUser({ email, password, role }) {
+    const data = await apiFetch('/login/', {
+        method: 'POST',
+        body: JSON.stringify({ email, password, role }),
+        skipAuth: true,
+    });
+    // If the backend returns a refresh token, store it
+    if (data && data.refresh_token) {
+        localStorage.setItem('iles_refresh', data.refresh_token);
+    }
+    return data;
 }
 
-//Register...accepts {username,email,password,confirmPassword,role}  I almost died looking for where to implement this coz i was working in a wrong file.
 export async function registerUser({ username, email, password, confirmPassword, role }) {
-  return apiFetch("/register/", {
-    method: "POST",
-    body: JSON.stringify({
-      username,
-      email,
-      password,
-      confirm_password: confirmPassword,
-      role,
-    }),
-  });
+    return apiFetch("/register/", {
+        method: "POST",
+        body: JSON.stringify({
+            username,
+            email,
+            password,
+            confirm_password: confirmPassword,
+            role,
+        }),
+        skipAuth: true,
+    });
 }
 
-export async function forgotPassword({ email, new_password, confirm_password }) {
-  return apiFetch("/forgot-password/", {
-    method: "POST",
-    body: JSON.stringify({ email, new_password, confirm_password }),
-  });
-}   //now this is the forgot password function that accepts email, new password and confirm password and sends it to the backend to handle the password reset process. Merge conflicts are real...i had not placed this function in real time .
+// --- Two-step Password Reset (forgot password) ---
+export async function requestPasswordReset({ email }) {
+    return apiFetch("/auth/password-reset-request/", {
+        method: "POST",
+        body: JSON.stringify({ email }),
+        skipAuth: true,
+    });
+}
 
-//now the plcements
+export async function confirmPasswordReset({ uid, token, newPassword, confirmPassword }) {
+    return apiFetch("/auth/password-reset-confirm/", {
+        method: "POST",
+        body: JSON.stringify({
+            uid,
+            token,
+            new_password: newPassword,
+            confirm_password: confirmPassword,
+        }),
+        skipAuth: true,
+    });
+}
+
+// --- Placements ---
 export const getPlacements = () => apiFetch('/placements/');
 export const getPlacement = (id) => apiFetch(`/placements/${id}/`);
 export const createPlacement = (data) => apiFetch('/placements/', {
-    method: 'POST', body: JSON.stringify(data)});
-
+    method: 'POST',
+    body: JSON.stringify(data)
+});
 export const updatePlacement = (id, data) => apiFetch(`/placements/${id}/`, {
-    method: 'PATCH', body: JSON.stringify(data)});
+    method: 'PATCH',
+    body: JSON.stringify(data)
+});
 
-//Weekly Logs
-export const getWeeklyLogs = () => apiFetch('/logs/'); 
+// --- Weekly Logs ---
+export const getWeeklyLogs = () => apiFetch('/logs/');
 export const getWeeklyLog = (id) => apiFetch(`/logs/${id}/`);
 export const createWeeklyLog = (data) => apiFetch('/logs/', {
-    method: 'POST', body: JSON.stringify(data)});
+    method: 'POST',
+    body: JSON.stringify(data)
+});
 export const updateWeeklyLog = (id, data) => apiFetch(`/logs/${id}/`, {
-    method: 'PATCH', body: JSON.stringify(data)});
-    
-//now eavluations
+    method: 'PATCH',
+    body: JSON.stringify(data)
+});
+
+// --- Evaluations ---
 export const getEvaluations = () => apiFetch('/evaluations/');
 export const getEvaluation = (id) => apiFetch(`/evaluations/${id}/`);
 export const createEvaluation = (data) => apiFetch('/evaluations/', {
-    method: 'POST', body: JSON.stringify(data)});
+    method: 'POST',
+    body: JSON.stringify(data)
+});
 
-
-//grades now
+// --- Grades ---
 export const getGrades = () => apiFetch('/grades/');
-
-export async function registerUser({ username, email, password, confirmPassword, role}) {
-    return apiFetch("/register/", {
-    method: "POST",
-    body: JSON.stringify({ username, email, password,
-      confirm_password: confirmPassword, role }),
-  });
-}
-
-export async function forgotPassword({ email, newPassword, confirmPassword }) {
-  return apiFetch("/forgot-password/", {
-    method: "POST",
-    body: JSON.stringify({ email,
-      new_password: newPassword,
-      confirm_password: confirmPassword }),
-  });
-}
- 
-
-
-
-    
-    
-
-
-    

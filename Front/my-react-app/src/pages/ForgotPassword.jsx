@@ -1,61 +1,49 @@
-// src/pages/ForgotPassword.jsx
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { forgotPassword } from '../services/api';
-import './Register.css';
+import { useState } from "react";
+import { requestPasswordReset } from "../services/api"; //this is our new updated path
+import { Link } from "react-router-dom";
 
-function ForgotPassword() {
+export default function ForgotPassword() {
   const [email, setEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const navigate = useNavigate();
+  const [message, setMessage] = useState("");
+  const [isError, setIsError] = useState(false);
 
-  const handleReset = async () => {
-    setLoading(true); setError(""); setSuccess("");
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match."); setLoading(false); return;
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setMessage(""); //this clear the previous messages
+
     try {
-      const data = await forgotPassword({ email, newPassword, confirmPassword });
-      if (!data.success) { setError(data.error || "Reset failed"); return; }
-      setSuccess("Password reset! Redirecting to login...");
-      setTimeout(() => navigate("/"), 1500);
+      await requestPasswordReset({ email });
+      setMessage("A Reset Link has been sent to your email check");
+      setEmail(""); //this claers the input if succsessful
+
     } catch (err) {
-      setError(err.message || "Something went wrong");
-    } finally { setLoading(false); }
+      setIsError(true);
+      setMessage(err.message || "Something went wrong plaese try again");
+    }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-box">
-        <h2>Reset Password</h2>
-        <p className="auth-subtitle">
-          Enter your registered email and choose a new password.
+    <div>
+      <h2>Forgot Password</h2>
+      <p>Enter your email to receive a password reset link</p>
+      <form onSubmit={handleSubmit}>
+        <input type="email"
+        placeholder="Email address"
+        value={email}
+        onChange={e => setEmail(e.target.value)}
+        required/>
+        <button type="submit">Send Reset Link</button>
+      </form>
+
+      {message && (
+        <p style={{ clor: isError ? 'red' : 'green', marginTop: '10px'}}>
+          {message}
         </p>
-        {error && <p className="error-msg">{error}</p>}
-        {success && <p className="success-msg">{success}</p>}
-        <input type="email" placeholder="Registered Email"
-          className="auth-input"
-          onChange={(e) => setEmail(e.target.value)} />
-        <input type="password" placeholder="New Password (min 8 chars)"
-          className="auth-input"
-          onChange={(e) => setNewPassword(e.target.value)} />
-        <input type="password" placeholder="Confirm New Password"
-          className="auth-input"
-          onChange={(e) => setConfirmPassword(e.target.value)} />
-        <button className={'auth-btn ${loading ? "disabled" : ""}'}
-          onClick={handleReset} disabled={loading}>
-          {loading ? "Resetting..." : "Reset Password"}
-        </button>
-        <p className="auth-link">
-          Remember your password? <Link to="/">Login</Link>
-        </p>
+      )}
+      <div style={{ marginTop: '20px'}}>
+        <Link to="/">Back to Login</Link>
       </div>
+
     </div>
   );
 }
-
-export default ForgotPassword;

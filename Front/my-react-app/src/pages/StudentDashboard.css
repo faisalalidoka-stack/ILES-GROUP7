@@ -399,3 +399,23 @@
   .sd-form-grid { grid-template-columns: 1fr; }
   .sd-field-full { grid-column: 1; }
 }
+
+/* ── Loading & error states ── */
+.loading, .error {
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.loading {
+  background: #e3f2fd;
+  color: #0277bd;
+  border-left: 4px solid #0288d1;
+}
+
+.error {
+  background: #ffebee;
+  color: #c62828;
+  border-left: 4px solid #ef5350;
+}

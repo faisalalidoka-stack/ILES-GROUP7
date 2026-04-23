@@ -29,12 +29,14 @@ def login_user(email,password):
 
     #how it looks like
     return {
-        "success": True,
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "role": user.role,
-        },
-        "token": access_token,
+        'success': True,
+        'token': str(refresh.access_token),
+        'refresh_token': str(refresh), #this is the one that allows the user to stay logged in
+        'user': {
+            'id': user.id,
+            'email': user.email,
+            'role': user.role,
+
+        }
     }
 
