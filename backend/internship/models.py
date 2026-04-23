@@ -23,7 +23,14 @@ class User(AbstractUser):
     We add a `role` field to the standard Django user so the rest of the app can
     branch behavior (permissions, dashboards, workflows) based on user type.
     """
+    #first im ensuring the email is uniques and can be used for login
+    email = models.EmailField(unique=True)
+    #now im telling django to use email instead of username for login and auth
+    USERNAME_FIELD = 'email'
+    #now both these fields will be asked for when creating super user
+    REQUIRED_FIELDS = ['username','role']
 
+    
     # High-level user type used throughout the app (e.g., STUDENT/COMPANY/ADMIN).
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="STUDENT")
 
@@ -47,7 +54,7 @@ class WeeklyLog(models.Model):
     week = models.IntegerField()
 
     # Free-form summary of tasks completed this week.
-    tasks = models.TextField()
+    description = models.TextField()
     status = models.CharField(max_length=20, choices= LOG_STATUSES, default="Draft")
     placement = models.ForeignKey('Placement', on_delete=models.SET_NULL, null=True, blank=True, related_name='logs')
     hours = models.FloatField(default=0)

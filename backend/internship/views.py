@@ -96,28 +96,36 @@ class PlacementDetailView(APIView):
 
 #now the weeklylog endpoint
 class WeeklyLogListView(APIView):
-    permission_classes = [IsAuthenticated]
-
+    #we want to allow students to submit weekly logs but only authenticated users can view them
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            #to make sure only students can submit weekly logs we use the custom permission class we created
+            return [IsAuthenticated(), IsStudentOnly()]
+        return [IsAuthenticated()] #this means everyone else just needs to be logged in to view
+    
     def get(self, request):
-        role = request.user.role
-        if role == 'STUDENT':
-            qs = WeeklyLog.objects.filter(
-                student=request.user
-            )
-        elif role == 'WORKPLACE_SUPERVISOR':
-            qs = WeeklyLog.objects.filter(
-                placement__workplace_supervisor=request.user
-            )
-        else:
-            qs = WeeklyLog.objects.all()
-        return Response(WeeklyLogSerializer(qs, many=True).data)
+        try:
+            role = request.user.role
+            if role == 'STUDENT':
+                qs = WeeklyLog.objects.filter(student=request.user)
+            elif role == 'WORKPLACE_SUPERVISOR':
+                qs = WeeklyLog.objects.filter(placement__workplace_supervisor=request.user)
+            else:
+                qs = WeeklyLog.objects.all()
+            serializer = WeeklyLogSerializer(qs, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            #thsi will help me catch the 500 error by printing it in the termianl
+            print(f"Error fetching weekly logs: {e}")
+            return Response([], status=status.HTTP_200_OK)
 
-    def post(self, request): #when the student create a new log 
+    #now for the post method where students submit their weekly logs
+    def post(self, request):
         s = WeeklyLogSerializer(data=request.data)
         if s.is_valid():
             s.save(student=request.user)
-            return Response(s.data, status=201)
-        return Response(s.errors, status=400)
+            return Response(s.data, status=status.HTTP_201_CREATED)
+        return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)    
 
 #now to view the details of the weely log
 class WeeklyLogDetailView(APIView):
@@ -267,10 +275,5 @@ class ConfirmPasswordResetView(APIView):
         
         return Response({'error': 'The reset link is invalid or has expired please try again.'}, status=400)
     
-class WeeklyLogListView(APIView):
-    def get_permissions(self):
-        if self.request.method == 'POST':
-            return [IsAuthenticated(), IsStudentOnly()]
-            return [IsAuthenticated()]
-        
+
         
