@@ -158,6 +158,36 @@ class EvaluationListView(APIView):
             s.save(submitted_by= request.user)
             return Response(s.data, status=201)
         return Response(s.errors, status=400)
+    
+class EvaluationDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, pk):
+        try:
+            return EvaluationForm.objects.get(pk=pk)
+        except EvaluationForm.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        obj = self.get_object(pk)
+        if not obj:
+            return Response({'error':'Not found'}, status=404)
+        return Response(EvaluationFormSerializer(obj).data)
+
+    def patch(self, request, pk):
+        obj = self.get_object(pk)
+        if not obj:
+            return Response({'error':'Not found'}, status=404)
+        new_status = request.data.get('status')
+        if new_status:
+            try:
+                obj.change_status(new_status)
+            except Exception as e:
+                return Response({'error': str(e)}, status=400)
+        s = EvaluationFormSerializer(obj, data=request.data, partial=True)
+        if s.is_valid():
+            s.save()
+            return Response(EvaluationFormSerializer(obj).data)
         
  #and finally the final grade endpoint
 class FinalGradeView(APIView):
@@ -169,3 +199,16 @@ class FinalGradeView(APIView):
             published=True
         )       
         return Response(FinalGradeSerializer(qs, many=True).data)
+    
+class FinalGradeCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if request.user.role != 'ACADEMIC_SUPERVISOR':
+            return Response({'error':'Only academic supervisors can post grades'}, status=403
+            )
+        s = FinalGradeSerializer(data=request.data)
+        if s.is_valid():
+            s.save(computed_by=request.user)
+            return Response(s.data, status=201)
+        return Response(s.errors, status=400)

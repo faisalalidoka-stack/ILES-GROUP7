@@ -22,6 +22,8 @@ from django.conf.urls.static import static
 from internship.views import (
     
     #RegisterView,ForgotPasswordView, 
+    EvaluationDetailView,
+    FinalGradeCreateView,
     LoginView,
     PlacementListView, PlacementDetailView,
     WeeklyLogListView, WeeklyLogDetailView,
@@ -48,8 +50,10 @@ urlpatterns = [
 
     #for the evaluations
     path('evaluations/', EvaluationListView.as_view(), name='evaluation-list'),
+    path('evaluations/<int:pk>/', EvaluationDetailView.as_view(), name='evaluation-detail'),
 
     #now the final grade
     path('grades/', FinalGradeView.as_view(), name='final-grade'),
+    path('grades/create/',FinalGradeCreateView.as_view(), name='grade-create'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
