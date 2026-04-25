@@ -1,13 +1,22 @@
 from django.shortcuts import render
+
+from .permissions import IsStudentOnly, IsWorkplaceSupervisorOnly, IsAcademicSupervisorOnly
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import Placement, WeeklyLog, EvaluationForm, FinalGrade
+from .models import User, Placement, WeeklyLog, EvaluationForm, FinalGrade
 from .serializers import (
     PlacementSerializer, WeeklyLogSerializer, EvaluationFormSerializer, FinalGradeSerializer,
+    RegisterSerializer,
 )
 from .services import login_user
+#i added thse to make our forgot password safer by using djangos built in
+#token generator and email functionality
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
 # Create your views here.
 
 #We use DRF's APIView class so weget JSON parsing authentication checking and error formatting for free
@@ -78,37 +87,45 @@ class PlacementDetailView(APIView):
             try :
                 obj.change_status(new_status)
             except Exception as e:
-                return Response({'error':'str(e)'}, status=400)
+                return Response({'error':str(e)}, status=400)
         s = PlacementSerializer(obj, data=request.data, partial=True)
-        if s.is_valid:
+        if s.is_valid():
             s.save()
         return Response(PlacementSerializer(obj).data) 
 
 
 #now the weeklylog endpoint
 class WeeklyLogListView(APIView):
-    permission_classes = [IsAuthenticated]
-
+    #we want to allow students to submit weekly logs but only authenticated users can view them
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            #to make sure only students can submit weekly logs we use the custom permission class we created
+            return [IsAuthenticated(), IsStudentOnly()]
+        return [IsAuthenticated()] #this means everyone else just needs to be logged in to view
+    
     def get(self, request):
-        role = request.user.role
-        if role == 'STUDENT':
-            qs = WeeklyLog.objects.filter(
-                student=request.user
-            )
-        elif role == 'WORKPLACE_SUPERVISOR':
-            qs = WeeklyLog.objects.filter(
-                placement_workplace_supervisor=request.user
-            )
-        else:
-            qs = WeeklyLog.objects.all()
-        return Response(WeeklyLogSerializer(qs, many=True).data)
+        try:
+            role = request.user.role
+            if role == 'STUDENT':
+                qs = WeeklyLog.objects.filter(student=request.user)
+            elif role == 'WORKPLACE_SUPERVISOR':
+                qs = WeeklyLog.objects.filter(placement__workplace_supervisor=request.user)
+            else:
+                qs = WeeklyLog.objects.all()
+            serializer = WeeklyLogSerializer(qs, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            #thsi will help me catch the 500 error by printing it in the termianl
+            print(f"Error fetching weekly logs: {e}")
+            return Response([], status=status.HTTP_200_OK)
 
-    def post(self, request): #when the student create a new log 
+    #now for the post method where students submit their weekly logs
+    def post(self, request):
         s = WeeklyLogSerializer(data=request.data)
         if s.is_valid():
             s.save(student=request.user)
-            return Response(s.data, status=201)
-        return Response(s.errors, status=400)
+            return Response(s.data, status=status.HTTP_201_CREATED)
+        return Response(s.errors, status=status.HTTP_400_BAD_REQUEST)    
 
 #now to view the details of the weely log
 class WeeklyLogDetailView(APIView):
@@ -116,7 +133,7 @@ class WeeklyLogDetailView(APIView):
 
     def get_object(self, pk):
         try:
-            return WeeklyLog.objaects.get(pk=pk)
+            return WeeklyLog.objects.get(pk=pk)
         except WeeklyLog.DoesNotExist:
             return None
 
@@ -148,9 +165,9 @@ class EvaluationListView(APIView):
 
     def get(self, request):
         qs = EvaluationForm.objects.filter(
-            Placement_workplace_supervisor=request.user
+            placement__workplace_supervisor=request.user
         )
-        return Response(EvaluationFormSerializer(qs, mant=True).data)
+        return Response(EvaluationFormSerializer(qs, many=True).data)
         
     def post(self, request):
         s = EvaluationFormSerializer(data=request.data)
@@ -158,6 +175,36 @@ class EvaluationListView(APIView):
             s.save(submitted_by= request.user)
             return Response(s.data, status=201)
         return Response(s.errors, status=400)
+    
+class EvaluationDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self, pk):
+        try:
+            return EvaluationForm.objects.get(pk=pk)
+        except EvaluationForm.DoesNotExist:
+            return None
+
+    def get(self, request, pk):
+        obj = self.get_object(pk)
+        if not obj:
+            return Response({'error':'Not found'}, status=404)
+        return Response(EvaluationFormSerializer(obj).data)
+
+    def patch(self, request, pk):
+        obj = self.get_object(pk)
+        if not obj:
+            return Response({'error':'Not found'}, status=404)
+        new_status = request.data.get('status')
+        if new_status:
+            try:
+                obj.change_status(new_status)
+            except Exception as e:
+                return Response({'error': str(e)}, status=400)
+        s = EvaluationFormSerializer(obj, data=request.data, partial=True)
+        if s.is_valid():
+            s.save()
+            return Response(EvaluationFormSerializer(obj).data)
         
  #and finally the final grade endpoint
 class FinalGradeView(APIView):
@@ -165,7 +212,108 @@ class FinalGradeView(APIView):
 
     def get(self, request):
         qs = FinalGrade.objects.filter(
-            Placement_student=request.user,
+            placement__student=request.user,
             published=True
         )       
         return Response(FinalGradeSerializer(qs, many=True).data)
+    
+class FinalGradeCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        if request.user.role != 'ACADEMIC_SUPERVISOR':
+            return Response({'error':'Only academic supervisors can post grades'}, status=403
+            )
+        s = FinalGradeSerializer(data=request.data)
+        if s.is_valid():
+            s.save(computed_by=request.user)
+            return Response(s.data, status=201)
+        return Response(s.errors, status=400)
+
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        s = RegisterSerializer(data=request.data)
+        if s.is_valid():
+            user = s.save()
+            return Response({
+                'success': True,
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'role': user.role,
+                }
+            }, status=201)
+        return Response({'success': False, 'errors': s.errors}, status=400)
+#this first view is for the user to request for the link to reset their password   
+class RequestPasswordResetView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email', '')
+        try:
+            user = User.objects.get(email=email)
+            
+            #this enerates the security tokens its in built in djang0
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            
+            #this is the link we send to the user
+            #it enables them to strt the reset process
+            reset_link = f"http://localhost:3000/reset-password/{uid}/{token}/"
+            
+            #we now send then an email with the reset password link
+            send_mail(
+                subject="Password Reset Request",
+                message=f"Click the link below to reset your password:\n{reset_link}",
+                from_email="noreply@yourapp.com",
+                recipient_list=[email],
+                fail_silently=False,
+            )
+
+            return Response({
+                'success': True,
+                'message': 'A reset link has been sent to your email check'
+            }, status=200)
+
+        except User.DoesNotExist:
+            #we return success even if the usr doesnt exist for security reasons
+            #we dont want to reveal if an email is registered or not to potential attackers
+            return Response({
+                'success': True, 
+                'message': 'A reset link has been sent to your email check'
+            }, status=200)
+#this view is for the user to actually change their password 
+#after they click the link in their email they rea then directed to apgec
+#where they can change their password
+class ConfirmPasswordResetView(APIView):
+    permission_classes = [AllowAny]
+    #thse are ibuilt in django i jsut reseached how to use them and implemented them here
+    def post(self, request):
+        uidb64 = request.data.get('uid', '')
+        token = request.data.get('token', '')
+        new_password = request.data.get('new_password', '')
+        confirm_password = request.data.get('confirm_password', '')
+
+        #this is the basic validation
+        if new_password != confirm_password:
+            return Response({'error': 'Passwords do not match'}, status=400)
+        
+        if len(new_password) < 8:
+            return Response({'error': 'Password must be at least 8 characters'}, status=400)
+
+        try:
+            #here we decode the user id and find the user in our db i dont completely understand these
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        #we now check ifthe token is valid for this specific user
+        if user is not None and default_token_generator.check_token(user, token):
+            user.set_password(new_password)
+            user.save()
+            return Response({'success': True, 'message': 'Password reset successful'}, status=200)
+        
+        return Response({'error': 'The reset link is invalid or has expired please try again.'}, status=400)

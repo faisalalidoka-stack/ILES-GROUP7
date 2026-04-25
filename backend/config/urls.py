@@ -18,8 +18,19 @@ from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
+from rest_framework_simplejwt.views import TokenRefreshView
 
 from internship.views import (
+    
+<<<<<<< HEAD
+    #RegisterView,ForgotPasswordView, 
+    EvaluationDetailView,
+    FinalGradeCreateView,
+=======
+    RegisterView,
+    RequestPasswordResetView,
+    ConfirmPasswordResetView,
+>>>>>>> d655a0548dc7b4da30048b3f3cc20ab6a605c731
     LoginView,
     PlacementListView, PlacementDetailView,
     WeeklyLogListView, WeeklyLogDetailView,
@@ -29,6 +40,12 @@ from internship.views import (
 urlpatterns = [
     path('admin/', admin.site.urls),
     #for authentiction
+    #i decided to add the forgot password and regiater views here
+    #because they are related to the user management and auth process
+    path('register/', RegisterView.as_view(), name='register'),
+    path('auth/password-reset-request/', RequestPasswordResetView.as_view(), name='password-reset-request'),
+    path('auth/password-reset-confirm/', ConfirmPasswordResetView.as_view(), name='password-reset-confirm'),
+
     path('login/', LoginView.as_view(), name='login'),
     #fro the placements
     path('placements/', PlacementListView.as_view(), name='placement-list'),
@@ -40,10 +57,15 @@ urlpatterns = [
     #and their details
     path('logs/<int:pk>/', WeeklyLogDetailView.as_view(), name='weeklylog-detail'),
 
+    #for the token refresh
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
     #for the evaluations
     path('evaluations/', EvaluationListView.as_view(), name='evaluation-list'),
+    path('evaluations/<int:pk>/', EvaluationDetailView.as_view(), name='evaluation-detail'),
 
     #now the final grade
     path('grades/', FinalGradeView.as_view(), name='final-grade'),
+    path('grades/create/',FinalGradeCreateView.as_view(), name='grade-create'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

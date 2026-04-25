@@ -5,25 +5,38 @@ import './WorkplaceSupervisorDashboard.css';
 
 export default function WorkplaceSupervisorDashboard() {
   const [placements, setPlacements] = useState([]);
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getWeeklyLogs, updateWeeklyLog, logOut } from '../services/api';
+import './WorkplaceSupervisorDashboard.css';
+
+function WorkplaceSupervisorDashboard() {
+  const navigate = useNavigate();
+
   const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [comment, setComment] = useState({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const user = getUser();
 
   useEffect(() => {
-    Promise.all([getPlacements(), getWeeklyLogs()])
-      .then(([pData, lData]) => {
-        setPlacements(pData.results ?? pData);
-        setLogs(lData.results ?? lData);
-      })
-      .finally(() => setLoading(false));
+    fetchLogs();
   }, []);
 
-  const handleApprove = async (logId) => {
-    await updateWeeklyLog(logId, { status: 'Approved' });
-    setLogs(prev => prev.map(l =>
-      l.id === logId ? { ...l, status: 'Approved' } : l
-    ));
+  const fetchLogs = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await getWeeklyLogs();
+      setLogs(data);
+    } catch (err) {
+      setError('Failed to load logs. Please refresh.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleReject = async (logId) => {
@@ -38,45 +51,47 @@ export default function WorkplaceSupervisorDashboard() {
   if (loading) return <div className='ws-loading'>Loading...</div>;
 
   return (
-    <div className='ws-root'>
-      <aside className='ws-sidebar'>
-        <div className='ws-logo'>ILES</div>
-        <button className='ws-logout' onClick={handleLogout}>
-          Logout
-        </button>
-      </aside>
-      <main className='ws-main'>
-        <h1 className='ws-title'>Workplace Supervisor Dashboard</h1>
-        {placements.map(p => (
-          <div key={p.id} className='ws-intern-card'>
-            <h2 className='ws-intern-name'>
-              {p.student?.username} — {p.company_name}
-            </h2>
-            {logs.filter(l => l.placement === p.id).map(log => (
-              <div key={log.id} className='ws-log-card'>
-                <p className='ws-log-tasks'>{log.tasks}</p>
-                <p className='ws-log-status'>
-                  Status: <span className={'ws-badge ws-badge-${log.status.toLowerCase()}'}>
-                    {log.status}
-                  </span>
-                </p>
-                {log.status === 'Submitted' && (
-                  <div className='ws-actions'>
-                    <button className='ws-btn-approve'
-                      onClick={() => handleApprove(log.id)}>
-                      Approve
-                    </button>
-                    <button className='ws-btn-reject'
-                      onClick={() => handleReject(log.id)}>
-                      Reject
-                    </button>
-                  </div>
-                )}
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <h2>Workplace Supervisor Dashboard</h2>
+        <button className="logout-btn" onClick={handleLogout}>Logout</button>
+      </div>
+      <p>Review weekly logs from your assigned students.</p>
+
+      {logs.length === 0 ? (
+        <p>No logs to review.</p>
+      ) : (
+        <div className="logs-list">
+          {logs.map(log => (
+            <div key={log.id} className="log-card">
+              <div className="log-header">
+                <strong>Student:</strong> {log.student?.username || 'Unknown'}
+                <span className="week">Week {log.week}</span>
               </div>
-            ))}
-          </div>
-        ))}
-      </main>
+              <div className="log-details">
+                <p><strong>Tasks:</strong> {log.tasks}</p>
+                <p><strong>Hours:</strong> {log.hours}</p>
+                <p><strong>Current Status:</strong> <span className={`status-badge ${log.status.toLowerCase()}`}>{log.status}</span></p>
+              </div>
+              <div className="review-section">
+                <textarea
+                  placeholder="Add a comment (optional)"
+                  value={comment[log.id] || ''}
+                  onChange={(e) => handleCommentChange(log.id, e.target.value)}
+                  rows="2"
+                />
+                <div className="action-buttons">
+                  <button onClick={() => handleReview(log.id, 'APPROVED')} className="approve-btn">Approve</button>
+                  <button onClick={() => handleReview(log.id, 'REJECTED')} className="reject-btn">Reject</button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+
+export default WorkplaceSupervisorDashboard;
+

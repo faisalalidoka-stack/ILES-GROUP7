@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUser, logOut, getPlacements, getWeeklyLogs, getGrades } from '../services/api';
+import { getUser, logOut, getPlacements, getWeeklyLogs, getGrades } from '../services/services/api';
 import './AcademicSupervisorDashboard.css';
 
 export default function AcademicSupervisorDashboard() {

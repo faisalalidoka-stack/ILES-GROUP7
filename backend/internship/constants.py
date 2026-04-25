@@ -48,7 +48,7 @@ VALID_LOG_TRANSITIONS = {
 
     "Draft": ["Submitted"],
     "Submitted": ["Approved", "Rejected"],
-    "Rejected": ["Draft"],
+    "Rejected": ["Submitted"],
     "Approved": []
 }
 

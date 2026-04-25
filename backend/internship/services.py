@@ -1,21 +1,12 @@
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from internship.models import User 
+
 def login_user(email,password):
-    #im first trying to find the user by their email
-    try:
-        user_object = User.objects.get(email=email)
-        username = user_object.username
-    #of course there is a possibility of the user not existing    
-    except User.DoesNotExist:
-        return {
-            "success": False, #i set success to false then return error
-            "error" : "Invalid credentials",
-        }
-    
-    #i now authenticate with the username and pasword 
-    #this feature comes with djang
-    user = authenticate(username=username, password=password)
+    # since we updated models.py to use email as the username_field
+    # django's authenticate now looks for the email inside the username parameter
+    # so we pass email directly here instead of looking up the username first
+    user = authenticate(username=email, password=password)
 
     if user is None:
         return {
@@ -23,18 +14,19 @@ def login_user(email,password):
             "error": "Invalid credentials",
         }
     
-    #i now generate the actual JWT tokens
+    # i now generate the actual jwt tokens
+    # this uses the refresh token class from simplejwt
     refresh = RefreshToken.for_user(user)
-    access_token = str(refresh.access_token)
 
-    #how it looks like
+    # how it looks like
+    # we return the access and refresh tokens along with user details
     return {
-        "success": True,
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "role": user.role,
-        },
-        "token": access_token,
+        'success': True,
+        'token': str(refresh.access_token),
+        'refresh_token': str(refresh), # this is the one that allows the user to stay logged in
+        'user': {
+            'id': user.id,
+            'email': user.email,
+            'role': user.role,
+        }
     }
-

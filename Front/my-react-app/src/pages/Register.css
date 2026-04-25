@@ -1,6 +1,4 @@
-/* src/pages/Register.css */
-/* Also used by Login.jsx and ForgotPassword.jsx */
-
+/* Register.css – styling for the Sign Up page */
 .auth-container {
   display: flex;
   justify-content: center;
@@ -60,8 +58,14 @@
   transition: opacity 0.2s;
 }
 
-.auth-btn:hover { opacity: 0.9; }
-.auth-btn.disabled { background: #aaa; cursor: not-allowed; }
+.auth-btn:hover {
+  opacity: 0.9;
+}
+
+.auth-btn.disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
 
 .auth-link {
   text-align: center;
@@ -70,8 +74,23 @@
   color: #555;
 }
 
-.auth-link a { color: #0d7c8f; text-decoration: none; }
-.auth-link a:hover { text-decoration: underline; }
+.auth-link a {
+  color: #0d7c8f;
+  text-decoration: none;
+}
 
-.error-msg { color: #c0392b; text-align: center; font-size: 0.875rem; }
-.success-msg { color: #27ae60; text-align: center; font-size: 0.875rem; }
+.auth-link a:hover {
+  text-decoration: underline;
+}
+
+.error-msg {
+  color: #c0392b;
+  text-align: center;
+  font-size: 0.875rem;
+}
+
+.success-msg {
+  color: #27ae60;
+  text-align: center;
+  font-size: 0.875rem;
+}
