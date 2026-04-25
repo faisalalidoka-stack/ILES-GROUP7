@@ -10,6 +10,18 @@ class RegisterSerializer(serializers.ModelSerializer):
         def validate(self, data):
             if data['password'] != data['confirm_password']:
                 raise serializers.ValidationError(
+<<<<<<< HEAD
+                    {"confirm password": "Passwords do not match."}
+                    )
+            return data
+            def create(self, validated_data):
+                validated_data.pop('confirm_password')  # Remove confirm_password before creating the user
+                return User.objects.create_user(
+                    username=validated_data['username'],
+                    email=validated_data['email'],
+                    password=validated_data['password'],
+                    role=validated_data.get('role', 'STUDENT'),
+=======
                     {"confirm password": "Passwords do not match."})
                 return data
         def create(self, validated_data):
@@ -19,9 +31,10 @@ class RegisterSerializer(serializers.ModelSerializer):
                 email=validated_data['email'],
                 password=validated_data['password'],
                 role=validated_data.get['role', 'STUDENT'],
+>>>>>>> d655a0548dc7b4da30048b3f3cc20ab6a605c731
                 )
 
-#firrst the users serializer
+#first the users serializer
 class UserSerializer(serializers.ModelSerializer):
     class Meta: #this is an inner class i use to provide meta data or configuration data about the main class
         model = User
@@ -72,7 +85,7 @@ class EvaluationFormSerializer(serializers.ModelSerializer):
         model = EvaluationForm
         fields = '__all__'
         read_only_fields = [
-            'submitted_by', 'status', 'submtted_at', 'created_at'
+            'submitted_by', 'status', 'submitted_at', 'created_at'
         ]
 
 #finally final grade serializers 
