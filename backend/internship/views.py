@@ -217,7 +217,6 @@ class FinalGradeView(APIView):
         )       
         return Response(FinalGradeSerializer(qs, many=True).data)
     
-<<<<<<< HEAD
 class FinalGradeCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -230,7 +229,7 @@ class FinalGradeCreateView(APIView):
             s.save(computed_by=request.user)
             return Response(s.data, status=201)
         return Response(s.errors, status=400)
-=======
+
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
@@ -318,12 +317,3 @@ class ConfirmPasswordResetView(APIView):
             return Response({'success': True, 'message': 'Password reset successful'}, status=200)
         
         return Response({'error': 'The reset link is invalid or has expired please try again.'}, status=400)
-    
-class WeeklyLogListView(APIView):
-    def get_permissions(self):
-        if self.request.method == 'POST':
-            return [IsAuthenticated(), IsStudentOnly()]
-            return [IsAuthenticated()]
-        
-        
->>>>>>> d655a0548dc7b4da30048b3f3cc20ab6a605c731
