@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getUser, logOut, getPlacements, getWeeklyLogs, updateWeeklyLog } from '../services/api';
+import './WorkplaceSupervisorDashboard.css';
+
+export default function WorkplaceSupervisorDashboard() {
+  const [placements, setPlacements] = useState([]);
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getWeeklyLogs, updateWeeklyLog, logOut } from '../services/api';
 import './WorkplaceSupervisorDashboard.css';
 
@@ -10,6 +17,9 @@ function WorkplaceSupervisorDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [comment, setComment] = useState({});
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const user = getUser();
 
   useEffect(() => {
     fetchLogs();
@@ -29,32 +39,16 @@ function WorkplaceSupervisorDashboard() {
     }
   };
 
-  const handleReview = async (logId, decision) => {
-    const currentComment = comment[logId] || '';
-    try {
-      await updateWeeklyLog(logId, {
-        status: decision,
-        supervisor_comment: currentComment,
-      });
-      fetchLogs();
-      setComment(prev => ({ ...prev, [logId]: '' }));
-    } catch (err) {
-      setError(`Failed to ${decision} log. Try again.`);
-      console.error(err);
-    }
+  const handleReject = async (logId) => {
+    await updateWeeklyLog(logId, { status: 'Rejected' });
+    setLogs(prev => prev.map(l =>
+      l.id === logId ? { ...l, status: 'Rejected' } : l
+    ));
   };
 
-  const handleCommentChange = (logId, value) => {
-    setComment(prev => ({ ...prev, [logId]: value }));
-  };
+  const handleLogout = () => { logOut(); navigate('/'); };
 
-  const handleLogout = () => {
-    logOut();
-    navigate('/');
-  };
-
-  if (loading) return <div className="loading">Loading logs...</div>;
-  if (error) return <div className="error">{error}</div>;
+  if (loading) return <div className='ws-loading'>Loading...</div>;
 
   return (
     <div className="dashboard-container">
@@ -100,3 +94,4 @@ function WorkplaceSupervisorDashboard() {
 }
 
 export default WorkplaceSupervisorDashboard;
+

@@ -1,23 +1,15 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Segoe UI", sans-serif;
-}
-
-body {
-  background-color: #f0f2f5;
-  color: #2c3e50;
-}
-
-input {
-  outline: none;
-}
-
-input:focus {
-  border-color: #2c3e50 !important;
-}
-
-button:hover {
-  opacity: 0.9;
+:root {
+  --color-primary: #2563EB;
+  --color-primary-lt: #EFF6FF;
+  --color-success: #15803D;
+  --color-success-lt: #F0FDF4;
+  --color-danger: #B91C1C;
+  --color-danger-lt: #FFF1F2;
+  --color-surface: #FFFFFF;
+  --color-bg: #F8FAFC;
+  --color-border: #E2E8F0;
+  --color-text: #374151;
+  --radius-card: 8px;
+  --radius-btn: 6px;
+  --shadow-card: 0 1px 3px rgba(0,0,0,.08);
 }

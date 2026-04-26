@@ -1,17 +1,23 @@
-import Navbar from "../components/Navbar";
-import { useState, useEffect } from "react";
-import { getPlacements, updatePlacement } from "../services/api";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getUser, logOut, getPlacements, updatePlacement } from '../services/services/api';
+import './AdminDashboard.css';
 
 export default function AdminDashboard() {
   const [placements, setPlacements] = useState([]); // we start with an empty array
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const user = getUser();
 
   useEffect(() => {
     // we add a catch here because if the backend returns 401 res.data will be empty
     getPlacements()
-      .then(res => {
-        if (res.data) setPlacements(res.data);
+      
+      .then(data => {
+        if (res.data) setPlacements(data.results ?? data);
       })
-      .catch(err => console.error("failed to fetch placements probably a 401", err));
+      .catch(err => console.error("failed to fetch placements probably a 401", err))
+      .finally(() => setLoading(false));
   }, []);
 
   const handleActivate = (id) => {
