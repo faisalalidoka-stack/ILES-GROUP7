@@ -22,9 +22,15 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from internship.views import (
     
+<<<<<<< HEAD
+    #RegisterView,ForgotPasswordView, 
+    EvaluationDetailView,
+    FinalGradeCreateView,
+=======
     RegisterView,
     RequestPasswordResetView,
     ConfirmPasswordResetView,
+>>>>>>> d655a0548dc7b4da30048b3f3cc20ab6a605c731
     LoginView,
     PlacementListView, PlacementDetailView,
     WeeklyLogListView, WeeklyLogDetailView,
@@ -56,8 +62,10 @@ urlpatterns = [
 
     #for the evaluations
     path('evaluations/', EvaluationListView.as_view(), name='evaluation-list'),
+    path('evaluations/<int:pk>/', EvaluationDetailView.as_view(), name='evaluation-detail'),
 
     #now the final grade
     path('grades/', FinalGradeView.as_view(), name='final-grade'),
+    path('grades/create/',FinalGradeCreateView.as_view(), name='grade-create'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

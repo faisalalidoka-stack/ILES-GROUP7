@@ -1,6 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getWeeklyLogs, createWeeklyLog, updateWeeklyLog, logOut, getUser } from "../services/api";
+import { 
+  getWeeklyLogs, 
+  createWeeklyLog, 
+  updateWeeklyLog, 
+  logOut, 
+  getUser,
+  getPlacements
+} from "../services/api";
 import "./StudentDashboard.css";
 
 const emptyForm = {
@@ -19,6 +26,7 @@ export default function StudentDashboard() {
   const user = getUser();
 
   const [logs, setLogs] = useState([]);
+  const [placementId, setPlacementId] = useState(null); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -30,30 +38,41 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     fetchLogs();
+    fetchPlacement();
   }, []);
 
   const fetchLogs = async () => {
     setLoading(true);
-    setError("");
     try {
       const data = await getWeeklyLogs();
       setLogs(data);
     } catch (err) {
-      setError("Failed to load logs. Please refresh.");
+      setError("Failed to load logs.");
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchPlacement = async () => {
+    try {
+      const data = await getPlacements();
+      if (Array.isArray(data) && data.length > 0) {
+        setPlacementId(data[0].id);
+      } else if (data && data.id) {
+        setPlacementId(data.id);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const validate = () => {
     const newErrors = {};
-    if (!form.week || isNaN(form.week) || Number(form.week) < 1 || Number(form.week) > 52)
-      newErrors.week = "Week must be between 1 and 52.";
+    if (!form.week || isNaN(form.week)) newErrors.week = "Week is required.";
     if (!form.date) newErrors.date = "Date is required.";
     if (!form.description.trim()) newErrors.description = "Description is required.";
-    if (!form.hours || isNaN(form.hours) || Number(form.hours) <= 0 || Number(form.hours) > 24)
-      newErrors.hours = "Enter valid hours (1–24).";
+    if (!form.hours || isNaN(form.hours)) newErrors.hours = "Hours is required.";
     if (!form.challenges.trim()) newErrors.challenges = "Challenges field is required.";
     if (!form.skills.trim()) newErrors.skills = "Skills field is required.";
     return newErrors;
@@ -87,6 +106,8 @@ export default function StudentDashboard() {
       hours: Number(form.hours),
       challenges: form.challenges.trim(),
       skills: form.skills.trim(),
+      placement: placementId,
+      attachment: form.attachment,
     };
 
     try {
@@ -97,7 +118,7 @@ export default function StudentDashboard() {
         await createWeeklyLog(logData);
         setSuccessMsg("Log submitted successfully!");
       }
-      await fetchLogs();
+      fetchLogs();
       setForm(emptyForm);
       setEditIndex(null);
       setEditId(null);
@@ -105,7 +126,7 @@ export default function StudentDashboard() {
       setErrors({});
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (err) {
-      setErrors({ submit: err.message || "Submission failed. Try again." });
+      setErrors({ submit: `Request failed (400)` });
       console.error(err);
     }
   };
@@ -154,16 +175,18 @@ export default function StudentDashboard() {
           <a href="#" className="sd-nav-link">📊 Reports</a>
           <a href="#" className="sd-nav-link">🔔 Notifications</a>
         </nav>
-        <button className="sd-logout-btn" onClick={handleLogout}>
-          ↩ Logout
-        </button>
+        <div className="sd-logout-wrapper">
+           <button className="sd-logout-btn" onClick={handleLogout}>
+             ↩ Logout
+           </button>
+        </div>
       </aside>
 
       <main className="sd-main">
         <header className="sd-header">
           <div>
             <h1 className="sd-welcome">Welcome back, {user?.email || "Student"} 👋</h1>
-            <p className="sd-subtitle">Internship Logging &amp; Evaluation System</p>
+            <p className="sd-subtitle">Internship Logging & Evaluation System</p>
           </div>
           <button
             className="sd-add-btn"
@@ -174,7 +197,7 @@ export default function StudentDashboard() {
         </header>
 
         {successMsg && <div className="sd-success">{successMsg}</div>}
-        {loading && <div className="loading">Loading logs...</div>}
+        {loading && <div className="loading">Loading...</div>}
         {error && <div className="error">{error}</div>}
 
         {showForm && (
@@ -193,9 +216,6 @@ export default function StudentDashboard() {
                   name="week"
                   value={form.week}
                   onChange={handleChange}
-                  placeholder="e.g. 1"
-                  min="1"
-                  max="52"
                   className={`sd-input ${errors.week ? "sd-input-err" : ""}`}
                 />
                 {errors.week && <span className="sd-err-text">{errors.week}</span>}
@@ -209,7 +229,6 @@ export default function StudentDashboard() {
                   value={form.date}
                   onChange={handleChange}
                   className={`sd-input ${errors.date ? "sd-input-err" : ""}`}
-                  max={new Date().toISOString().split("T")[0]}
                 />
                 {errors.date && <span className="sd-err-text">{errors.date}</span>}
               </div>
@@ -221,9 +240,6 @@ export default function StudentDashboard() {
                   name="hours"
                   value={form.hours}
                   onChange={handleChange}
-                  placeholder="e.g. 8"
-                  min="1"
-                  max="24"
                   className={`sd-input ${errors.hours ? "sd-input-err" : ""}`}
                 />
                 {errors.hours && <span className="sd-err-text">{errors.hours}</span>}
@@ -235,7 +251,6 @@ export default function StudentDashboard() {
                   name="description"
                   value={form.description}
                   onChange={handleChange}
-                  placeholder="Describe what you did during the internship today..."
                   rows={3}
                   className={`sd-textarea ${errors.description ? "sd-input-err" : ""}`}
                 />
@@ -248,7 +263,6 @@ export default function StudentDashboard() {
                   name="challenges"
                   value={form.challenges}
                   onChange={handleChange}
-                  placeholder="What challenges did you face? What did you learn from them?"
                   rows={3}
                   className={`sd-textarea ${errors.challenges ? "sd-input-err" : ""}`}
                 />
@@ -261,7 +275,6 @@ export default function StudentDashboard() {
                   name="skills"
                   value={form.skills}
                   onChange={handleChange}
-                  placeholder="e.g. React, Django, Git, problem-solving, teamwork"
                   rows={2}
                   className={`sd-textarea ${errors.skills ? "sd-input-err" : ""}`}
                 />
@@ -277,7 +290,6 @@ export default function StudentDashboard() {
                     name="attachment"
                     onChange={handleChange}
                     className="sd-file-input"
-                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
                   />
                 </label>
               </div>
@@ -285,7 +297,7 @@ export default function StudentDashboard() {
 
             <div className="sd-form-actions">
               <button className="sd-submit-btn" onClick={handleSubmit}>
-                {editIndex !== null ? "Update Log" : "Submit Log"}
+                Submit Log
               </button>
               <button className="sd-cancel-btn" onClick={handleCancel}>
                 Cancel
@@ -297,58 +309,36 @@ export default function StudentDashboard() {
         {!loading && !error && (
           <section className="sd-table-section">
             <h2 className="sd-section-title">My Internship Logs</h2>
-            {logs.length === 0 ? (
-              <div className="sd-empty">
-                <p>📂 No logs yet. Click <strong>+ New Log</strong> to get started!</p>
-              </div>
-            ) : (
-              <div className="sd-table-wrapper">
-                <table className="sd-table">
-                  <thead>
-                    <tr>
-                      <th>#</th>
-                      <th>Week</th>
-                      <th>Date</th>
-                      <th>Description</th>
-                      <th>Hours</th>
-                      <th>Challenges</th>
-                      <th>Skills</th>
-                      <th>Attachment</th>
-                      <th>Status</th>
-                      <th>Actions</th>
+            <div className="sd-table-wrapper">
+              <table className="sd-table">
+                <thead>
+                  <tr>
+                    <th>Week</th>
+                    <th>Date</th>
+                    <th>Hours</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.map((log, i) => (
+                    <tr key={log.id || i}>
+                      <td>{log.week}</td>
+                      <td>{log.date}</td>
+                      <td>{log.hours}h</td>
+                      <td>
+                        <span className={`sd-status sd-status-${(log.status || "pending").toLowerCase()}`}>
+                          {log.status || "Pending"}
+                        </span>
+                      </td>
+                      <td>
+                        <button className="sd-edit-btn" onClick={() => handleEdit(i, log)}>✏️ Edit</button>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {logs.map((log, i) => (
-                      <tr key={log.id || i} className={i % 2 === 0 ? "sd-row-even" : ""}>
-                        <td>{i + 1}</td>
-                        <td>{log.week}</td>
-                        <td>{log.date}</td>
-                        <td className="sd-td-desc">{log.description}</td>
-                        <td>{log.hours}h</td>
-                        <td className="sd-td-desc">{log.challenges}</td>
-                        <td className="sd-td-desc">{log.skills}</td>
-                        <td>
-                          {log.attachmentName ? (
-                            <span className="sd-attach-tag">📎 {log.attachmentName}</span>
-                          ) : "—"}
-                        </td>
-                        <td>
-                          <span className={`sd-status sd-status-${(log.status || "pending").toLowerCase()}`}>
-                            {log.status || "Pending"}
-                          </span>
-                        </td>
-                        <td>
-                          <button className="sd-edit-btn" onClick={() => handleEdit(i, log)}>
-                            ✏️ Edit
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </section>
         )}
       </main>

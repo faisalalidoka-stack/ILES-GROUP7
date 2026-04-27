@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import StudentDashboard from "./pages/StudentDashboard";
 import Register from "./pages/Register";
@@ -14,7 +14,9 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Public routes – no authentication needed */}
+        {/* we added the /login path here so the router can find it */}
         <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:uid/:token" element={<ResetPasswordConfirm />} />
@@ -52,6 +54,9 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* catch-all to prevent the no routes matched error */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );

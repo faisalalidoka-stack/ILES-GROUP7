@@ -8,6 +8,7 @@ This file intentionally stays small and descriptive:
 """
 
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from .constants import (ROLE_CHOICES, LOG_STATUSES,
@@ -23,7 +24,14 @@ class User(AbstractUser):
     We add a `role` field to the standard Django user so the rest of the app can
     branch behavior (permissions, dashboards, workflows) based on user type.
     """
+    #first im ensuring the email is uniques and can be used for login
+    email = models.EmailField(unique=True)
+    #now im telling django to use email instead of username for login and auth
+    USERNAME_FIELD = 'email'
+    #now both these fields will be asked for when creating super user
+    REQUIRED_FIELDS = ['username','role']
 
+    
     # High-level user type used throughout the app (e.g., STUDENT/COMPANY/ADMIN).
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="STUDENT")
 
@@ -47,7 +55,7 @@ class WeeklyLog(models.Model):
     week = models.IntegerField()
 
     # Free-form summary of tasks completed this week.
-    tasks = models.TextField()
+    description = models.TextField()
     status = models.CharField(max_length=20, choices= LOG_STATUSES, default="Draft")
     placement = models.ForeignKey('Placement', on_delete=models.SET_NULL, null=True, blank=True, related_name='logs')
     hours = models.FloatField(default=0)
@@ -76,9 +84,18 @@ class WeeklyLog(models.Model):
 class EvaluationForm(models.Model):
     placement = models.ForeignKey('Placement', on_delete=models.CASCADE, related_name='evaluations')
     submitted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='submitted_evaluations')    
-    technical_skills = models.IntegerField(default=0) #this is the score out of 10 for the technical skills of the student
-    communication_skills = models.IntegerField(default=0) #this is the score out of 10 for the communication skills of the student
-    punctuality = models.IntegerField(default=0) #this is the score out of 10 for the punctuality of the student
+    technical_skills = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0),MaxValueValidator(10)]
+        ) #this is the score out of 10 for the technical skills of the student
+    communication_skills = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(10)]
+        ) #this is the score out of 10 for the communication skills of the student
+    punctuality = models.IntegerField(
+        default=0,
+        validators=[MinValueValidator(0),MaxValueValidator(10)]
+        ) #this is the score out of 10 for the punctuality of the student
     overall_comments = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=EVAL_STATUSES, default='Draft')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -92,7 +109,8 @@ class EvaluationForm(models.Model):
         self.save()
 
     def __str__(self):
-        return f"Evaluation for {self.placement} by {self.submitted_by} ({self.status})"        
+        return f"Evaluation for {self.placement} by {self.submitted_by} ({self.status})"
+
 #This is a custom Exception class to handle invalid log transitions
 class InvalidStateError(Exception):
     """this is raised when a state transition is invalid""" 
@@ -134,7 +152,24 @@ class FinalGrade(models.Model):
     computed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Grade for {self.placement.student.username} : {self.grade_letter}"       
+        return f"Grade for {self.placement.student.username} : {self.grade_letter}" 
+    
+    def compute_grade_letter(self):
+        if self.score >= 70:
+            return 'A'
+        elif self.score >= 60:
+            return 'B'
+        elif self.score >= 50:
+            return 'C'
+        elif self.score >= 40:
+            return 'D'
+        else:
+            return 'F'
+        
+    def save(self,*args,**kwargs):
+        self.grade_letter = self.compute_grade_letter() 
+        super().save(*args,**kwargs)  
+        
 
 
     
