@@ -50,7 +50,7 @@ class PlacementSerializer(serializers.ModelSerializer):
 
     academic_supervisor_id = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.filter(role='ACADEMIC_SUPERVISOR'),
-        write_only=True, source='academic_supervisor', required=False
+        write_only=True, source='academic_supervisor', required=False, allow_null=True
     )
 
     class Meta:
