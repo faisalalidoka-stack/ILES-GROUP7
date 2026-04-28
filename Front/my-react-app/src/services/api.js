@@ -95,7 +95,7 @@ export async function confirmPasswordReset({ uid, token, newPassword, confirmPas
 export const getPlacements = () => apiFetch('/placements/');
 export const getPlacement = (id) => apiFetch(`/placements/${id}/`);
 export const createPlacement = (data) => apiFetch('/placements/', { method: 'POST', body: JSON.stringify(data) });
-export const updatePlacement = (id, data) => apiFetch(`/placements/${id}//`, { method: 'PATCH', body: JSON.stringify(data) });
+export const updatePlacement = (id, data) => apiFetch(`/placements/${id}/`, { method: 'PATCH', body: JSON.stringify(data) });
 
 // --- Weekly Logs ---
 export const getWeeklyLogs = () => apiFetch('/logs/');
