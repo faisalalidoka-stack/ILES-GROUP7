@@ -64,7 +64,7 @@ export default function AcademicSupervisorDashboard() {
                   <span className={`as-badge as-badge-${log.status.toLowerCase()}`}>
                     {log.status}
                   </span>
-                  <span>{log.tasks?.slice(0, 60)}...</span>
+                  <span>{log.description?.slice(0, 60)}...</span>
                 </div>
               ))}
               <h3 className='as-section-hdr'>Evaluation Scores</h3>

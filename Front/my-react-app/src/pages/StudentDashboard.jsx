@@ -101,7 +101,6 @@ export default function StudentDashboard() {
 
     const logData = {
       week: Number(form.week),
-      date: form.date,
       description: form.description.trim(),
       hours: Number(form.hours),
       challenges: form.challenges.trim(),

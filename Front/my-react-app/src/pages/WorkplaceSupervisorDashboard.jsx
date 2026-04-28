@@ -75,7 +75,7 @@ function WorkplaceSupervisorDashboard() {
                 <span className="week">Week {log.week}</span>
               </div>
               <div className="log-details">
-                <p><strong>Tasks:</strong> {log.tasks}</p>
+                <p><strong>Tasks:</strong> {log.description}</p>
                 <p><strong>Hours:</strong> {log.hours}</p>
                 <p><strong>Current Status:</strong> <span className={`status-badge ${log.status.toLowerCase()}`}>{log.status}</span></p>
               </div>
