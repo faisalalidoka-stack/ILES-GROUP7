@@ -35,10 +35,12 @@ export default function StudentDashboard() {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [successMsg, setSuccessMsg] = useState("");
+  const [grade, setGrade] = useState(null);
 
   useEffect(() => {
     fetchLogs();
     fetchPlacement();
+    fetchGrade();
   }, []);
 
   const fetchLogs = async () => {
@@ -66,6 +68,17 @@ export default function StudentDashboard() {
       console.error(err);
     }
   };
+  const fetchGrade = async () => {
+  try {
+    const data = await getGrades();
+    const gradesArray = Array.isArray(data) ? data : data.results ?? [];
+    if (gradesArray.length > 0) {
+      setGrade(gradesArray[0]); // assuming one grade per student
+    }
+  } catch (err) {
+    console.error('Failed to fetch grade:', err);
+  }
+};
 
   const validate = () => {
     const newErrors = {};
@@ -147,6 +160,18 @@ export default function StudentDashboard() {
     setErrors({});
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const handleSubmitForReview = async (logId) => {
+  try {
+    await updateWeeklyLog(logId, { status: 'Submitted' });
+    setSuccessMsg('Log submitted for supervisor review!');
+    fetchLogs(); // refresh the list
+  } catch (err) {
+    setError('Failed to submit log: ' + (err.message || 'Please try again.'));
+    console.error(err);
+  }
+};
+
 
   const handleCancel = () => {
     setForm(emptyForm);
@@ -332,7 +357,22 @@ export default function StudentDashboard() {
                       </td>
                       <td>
                         <button className="sd-edit-btn" onClick={() => handleEdit(i, log)}>✏️ Edit</button>
+                        {log.status === 'Draft' && (
+                      <button 
+                        className="sd-submit-btn"
+                        onClick= {() => handleSubmitForReview(log.id)}
+                        style ={{ marginLeft: '8px'}}
+                      >
+                           📤 Submit
+                           </button>
+                    )}
+                    {log.status === 'Rejected' && log.supervisor_comment && (
+                      <div className ="sd-feedback">
+                        <strong>Supervisor feedback: </strong> {log.supervisor_comment}
+                        </div>
+                      )}  
                       </td>
+                      
                     </tr>
                   ))}
                 </tbody>

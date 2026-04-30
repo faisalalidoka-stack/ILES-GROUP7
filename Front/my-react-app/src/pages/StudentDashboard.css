@@ -340,6 +340,16 @@
   word-break: break-word;
 }
 
+.sd-feedback {
+  margin-top: 6px;
+  font-size: 12px;
+  background: #fef2f2;
+  color: #b91c1c;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border-left: 3px solid #dc2626;
+}
+
 /* Status badge */
 .sd-status {
   padding: 4px 10px;
