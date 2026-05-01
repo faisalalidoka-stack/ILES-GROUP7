@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { logOut, getPlacements, updatePlacement } from '../services/api';
+import { logOut, getPlacements, updatePlacement, createPlacement } from '../services/api';
+import './AdminDashboard.css';
 // If you have a CSS file, import it; otherwise remove or comment out
 // import './AdminDashboard.css';
 
@@ -9,6 +10,16 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const [showForm, setShowForm] = useState(false);
+  const [formMsg, setFormMsg] = useState('');
+  const [newPlacement, setNewPlacement] = useState({
+     student_id: '',
+     company_name: '',
+     start_date: '',
+     end_date: '',
+     workplace_supervisor_id: '',
+     academic_supervisor_id: '',
+  });
 
   useEffect(() => {
     getPlacements()
@@ -37,6 +48,31 @@ export default function AdminDashboard() {
     navigate('/');
   };
 
+  const handleFormChange = (e) => {
+  setNewPlacement(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleCreatePlacement = async () => {
+    try {
+      const created = await createPlacement(newPlacement);
+      setPlacements(prev => [created, ...prev]);
+      setFormMsg('Placement created successfully!');
+      setShowForm(false);
+      setNewPlacement({
+        student_id: '',
+        company_name: '',
+        start_date: '',
+        end_date: '',
+        workplace_supervisor_id: '',
+        academic_supervisor_id: '',
+      });
+    setTimeout(() => setFormMsg(''), 3000);
+    } catch (err) {
+      setFormMsg('Error: ' + (err.message || 'Creation failed'));
+      console.error(err);
+   }
+  };
+
   if (loading) return <div className="loading">Loading placements...</div>;
   if (error) return <div className="error">{error}</div>;
 
@@ -61,6 +97,40 @@ export default function AdminDashboard() {
       </button>
 
       <h2>Admin Dashboard</h2>
+       {formMsg && <div className="admin-msg">{formMsg}</div>}
+        <button onClick={() => setShowForm(!showForm)} className="admin-add-btn">
+          {showForm ? 'Cancel' : '+ New Placement'}
+        </button>
+        {showForm && (
+          <div className="admin-form-card">
+            <h3>Create Placement</h3>
+            <div className="admin-field">
+              <label>Student ID</label>
+              <input name="student_id" value={newPlacement.student_id} onChange={handleFormChange} />
+            </div>
+            <div className="admin-field">
+              <label>Company Name</label>
+              <input name="company_name" value={newPlacement.company_name} onChange={handleFormChange} />
+            </div>
+            <div className="admin-field">
+              <label>Start Date</label>
+              <input type="date" name="start_date" value={newPlacement.start_date} onChange={handleFormChange} />
+            </div>
+            <div className="admin-field">
+              <label>End Date</label>
+              <input type="date" name="end_date" value={newPlacement.end_date} onChange={handleFormChange} />
+            </div>
+            <div className="admin-field">
+              <label>Workplace Supervisor ID</label>
+              <input name="workplace_supervisor_id" value={newPlacement.workplace_supervisor_id} onChange={handleFormChange} />
+            </div>
+            <div className="admin-field">
+              <label>Academic Supervisor ID</label>
+              <input name="academic_supervisor_id" value={newPlacement.academic_supervisor_id} onChange={handleFormChange} />
+            </div>
+            <button className="admin-submit-btn" onClick={handleCreatePlacement}>Create</button>
+          </div>
+        )}
       <table border="1" cellPadding="8" style={{ borderCollapse: 'collapse', width: '100%' }}>
         <thead>
           <tr>
