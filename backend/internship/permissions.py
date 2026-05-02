@@ -12,3 +12,8 @@ class IsAcademicSupervisorOnly(BasePermission):
     def has_permission(self, request, view):
         return bool(request.user and request.user.is_authenticated and request.user.role =='ACADEMIC_SUPERVISOR')
     
+class IsAdminOnly(BasePermission):
+    def has_permission(self, request, view):
+        return bool( request.user and request.user.is_authenticated and request.user.role == 'INTERNSHIP_ADMIN')
+
+    
