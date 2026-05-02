@@ -164,15 +164,27 @@ class EvaluationListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        qs = EvaluationForm.objects.filter(
+        role = request.user.role
+        if role == 'WORKPLACE_SUPERVISOR':
+            qs = EvaluationForm.objects.filter(submitted_by=request.user)
+        elif role == 'ACADEMIC_SUPERVISOR':
+            qs = EvaluationForm.objects.filter(
             placement__workplace_supervisor=request.user
         )
+        elif role == 'INTERNSHIP ADMIN':
+            qs = EvaluationForm.objects.all()
+        else:
+            qs = EvaluationForm.objects.filter(placement__student=request.user)
         return Response(EvaluationFormSerializer(qs, many=True).data)
         
     def post(self, request):
         s = EvaluationFormSerializer(data=request.data)
         if s.is_valid():
-            s.save(submitted_by= request.user)
+            eval_obj = s.save(submitted_by=request.user)
+            for admin_user in User.objects.filter(role='INTERNSHIP_ADMIN'):
+                create_notification(
+                    admin_user,
+                    f"Evaluation submitted for placement #{eval_obj.placement_id}")
             return Response(s.data, status=201)
         return Response(s.errors, status=400)
     
@@ -317,3 +329,25 @@ class ConfirmPasswordResetView(APIView):
             return Response({'success': True, 'message': 'Password reset successful'}, status=200)
         
         return Response({'error': 'The reset link is invalid or has expired please try again.'}, status=400)
+    
+    class PublishGradeView(APIView):
+        permission_classes = [IsAuthenticated]
+        def post (self,request, pk):
+            if request.user.role != 'INTERNSHIP_ADMIN':
+                return Response({'error':'Admin Only'}, status=403)
+            try:
+                grade = FinalGrade.objects.get(pk=pk)
+            except FinalGrade.DoesNotExist:
+                return Response({'error':'Grade not found'}, status=404)
+            grade.published = True
+            grade.save()
+            placement = grade.placement
+            try:
+                placement.change_status('Completed')
+            except Exception:
+                pass #already Completed is fine
+            create_notification(
+                placement.student,
+                f"Your final grade has been published. Score: {grade.score} ({grade.grade_letters})"
+            )
+            return Response (FinalGradeSerializer(grade).data)

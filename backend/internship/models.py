@@ -133,6 +133,9 @@ class Placement(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     #deadline enforcemennt
     deadline = models.DateField(null=True, blank=True)
+    address = models.CharField(max_length=500, blank=True)
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, relatedname='approved_placements', limit_choices_to={'role': 'INTERNSHIP_ADMIN'})
+    
 
     def change_status(self, new_status):
         validate_transition(self.status, new_status, VALID_PLACEMENT_TRANSITIONS)
@@ -170,6 +173,37 @@ class FinalGrade(models.Model):
         self.grade_letter = self.compute_grade_letter() 
         super().save(*args,**kwargs)  
         
+
+class LogReview(models.Model):
+    log = models.ForeignKey(WeeklyLog, on_delete = models.CASCADE, related_name='reviews')  
+    supervisor = models.ForeignKey(User, on_delete = models.SET_NULL, null = True, related_name = 'log_reviews')
+    decision = models.Charfield(max_length = 20, choices= [('Approved', 'Approved'),('Rejected', 'Rejected')]
+                                )      
+    comment = models.TextField(blank = True)
+    reviewed_at = models.DateTimeField(auto_now_add = True)
+    def __str__(self):
+        return f"Review of Log# {self.log_id} by {self.supervisor} - {self.decision}"
+    
+
+class Notification(models.Model):
+    recipient = models.ForeignKey(User, on_delete = models.CASCADE, related_name = 'notifications')
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        ordering = ['-created_at']
+        def __str__(self):
+            return f"Notification for {self.recipient.username}: {self.message[:40]}"
+        
+class Flag(models.Model):
+    student = models.ForeinKey(User, on_delete=models.CASCADE, related_name='flags', limit_choices_to={'role':'STUDENT'}
+                               )
+    raised_by = models.ForeignKey(User, on_delete=models,SET_NULL, null=True, related_name='raised_flags')
+    reason = models.TextField()
+    created_at = models.DataTimeField(auto_now_add=True)
+    def __str__(self):
+        return f"Flag on {self.student.username} by {self.raised_by}"
+
 
 
     
