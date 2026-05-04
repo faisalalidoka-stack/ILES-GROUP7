@@ -6,13 +6,13 @@ import {
   updateWeeklyLog, 
   logOut, 
   getUser,
-  getPlacements
+  getPlacements,
+  getGrades
 } from "../services/api";
 import "./StudentDashboard.css";
 
 const emptyForm = {
   week: "",
-  date: "",
   description: "",
   hours: "",
   challenges: "",
@@ -27,6 +27,7 @@ export default function StudentDashboard() {
 
   const [logs, setLogs] = useState([]);
   const [placementId, setPlacementId] = useState(null); 
+  const [grade, setGrade] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -39,6 +40,7 @@ export default function StudentDashboard() {
   useEffect(() => {
     fetchLogs();
     fetchPlacement();
+    fetchGrade();
   }, []);
 
   const fetchLogs = async () => {
@@ -67,10 +69,21 @@ export default function StudentDashboard() {
     }
   };
 
+  const fetchGrade = async () => {
+    try {
+      const data = await getGrades();
+      const gradesArray = Array.isArray(data) ? data : data.results ?? [];
+      if (gradesArray.length > 0) {
+        setGrade(gradesArray[0]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch grade:", err);
+    }
+  };
+
   const validate = () => {
     const newErrors = {};
     if (!form.week || isNaN(form.week)) newErrors.week = "Week is required.";
-    if (!form.date) newErrors.date = "Date is required.";
     if (!form.description.trim()) newErrors.description = "Description is required.";
     if (!form.hours || isNaN(form.hours)) newErrors.hours = "Hours is required.";
     if (!form.challenges.trim()) newErrors.challenges = "Challenges field is required.";
@@ -125,7 +138,18 @@ export default function StudentDashboard() {
       setErrors({});
       setTimeout(() => setSuccessMsg(""), 3000);
     } catch (err) {
-      setErrors({ submit: `Request failed (400)` });
+      setErrors({ submit: `Request failed` });
+      console.error(err);
+    }
+  };
+
+  const handleSubmitForReview = async (logId) => {
+    try {
+      await updateWeeklyLog(logId, { status: 'Submitted' });
+      setSuccessMsg('Log submitted for supervisor review!');
+      fetchLogs();
+    } catch (err) {
+      setError('Failed to submit log: ' + (err.message || 'Please try again.'));
       console.error(err);
     }
   };
@@ -133,7 +157,6 @@ export default function StudentDashboard() {
   const handleEdit = (index, log) => {
     setForm({
       week: log.week || "",
-      date: log.date,
       description: log.description,
       hours: String(log.hours),
       challenges: log.challenges,
@@ -160,6 +183,60 @@ export default function StudentDashboard() {
     logOut();
     navigate("/");
   };
+
+  const GradeCard = ({ grade }) => {
+    if (!grade || !grade.published) return null;
+    const b = grade.breakdown;
+    const gradeColors = {
+      A: '#2E7D32',
+      B: '#1A73E8',
+      C: '#E65100',
+      D: '#6A1B9A',
+      F: '#C62828',
+    };
+    const color = gradeColors[grade.grade_letter] || '#495057';
+
+    return (
+      <section className="sd-grade-card">
+        <h2 className="sd-section-title">My Final Grade</h2>
+        <div className="sd-grade-display">
+          <span className="sd-grade-letter" style={{ color }}>
+            {grade.grade_letter}
+          </span>
+          <span className="sd-grade-score">{grade.score} / 100</span>
+        </div>
+        {b && (
+          <div className="sd-grade-breakdown">
+            <h4>Score Breakdown</h4>
+            <div className="sd-breakdown-row">
+              <span>Technical Skills ({b.technical_skills}/10 × 4)</span>
+              <span className="sd-breakdown-val">{b.technical_weighted} pts</span>
+            </div>
+            <div className="sd-breakdown-row">
+              <span>Communication ({b.communication_skills}/10 × 3)</span>
+              <span className="sd-breakdown-val">{b.communication_weighted} pts</span>
+            </div>
+            <div className="sd-breakdown-row">
+              <span>Punctuality ({b.punctuality}/10 × 3)</span>
+              <span className="sd-breakdown-val">{b.punctuality_weighted} pts</span>
+            </div>
+            <div className="sd-breakdown-total">
+              <span>Total</span>
+              <span>{b.total} / 100</span>
+            </div>
+          </div>
+        )}
+        {grade.remarks && (
+          <div className="sd-grade-remarks">
+            <strong>Remarks:</strong> {grade.remarks}
+          </div>
+        )}
+      </section>
+    );
+  };
+
+  if (loading) return <div className="loading">Loading...</div>;
+  if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="sd-root">
@@ -218,18 +295,6 @@ export default function StudentDashboard() {
                   className={`sd-input ${errors.week ? "sd-input-err" : ""}`}
                 />
                 {errors.week && <span className="sd-err-text">{errors.week}</span>}
-              </div>
-
-              <div className="sd-field">
-                <label className="sd-label">Date *</label>
-                <input
-                  type="date"
-                  name="date"
-                  value={form.date}
-                  onChange={handleChange}
-                  className={`sd-input ${errors.date ? "sd-input-err" : ""}`}
-                />
-                {errors.date && <span className="sd-err-text">{errors.date}</span>}
               </div>
 
               <div className="sd-field">
@@ -296,7 +361,7 @@ export default function StudentDashboard() {
 
             <div className="sd-form-actions">
               <button className="sd-submit-btn" onClick={handleSubmit}>
-                Submit Log
+                {editIndex !== null ? "Update Log" : "Submit Log"}
               </button>
               <button className="sd-cancel-btn" onClick={handleCancel}>
                 Cancel
@@ -313,7 +378,6 @@ export default function StudentDashboard() {
                 <thead>
                   <tr>
                     <th>Week</th>
-                    <th>Date</th>
                     <th>Hours</th>
                     <th>Status</th>
                     <th>Actions</th>
@@ -322,8 +386,7 @@ export default function StudentDashboard() {
                 <tbody>
                   {logs.map((log, i) => (
                     <tr key={log.id || i}>
-                      <td>{log.week}</td>
-                      <td>{log.date}</td>
+                      <td style={{ maxWidth: '100px' }}>{log.week}</td>
                       <td>{log.hours}h</td>
                       <td>
                         <span className={`sd-status sd-status-${(log.status || "pending").toLowerCase()}`}>
@@ -332,6 +395,20 @@ export default function StudentDashboard() {
                       </td>
                       <td>
                         <button className="sd-edit-btn" onClick={() => handleEdit(i, log)}>✏️ Edit</button>
+                        {log.status === 'Draft' && (
+                          <button 
+                            className="sd-submit-btn" 
+                            onClick={() => handleSubmitForReview(log.id)}
+                            style={{ marginLeft: '8px' }}
+                          >
+                            📤 Submit
+                          </button>
+                        )}
+                        {log.status === 'Rejected' && log.supervisor_comment && (
+                          <div className="sd-feedback" style={{ marginTop: '6px' }}>
+                            <strong>Feedback:</strong> {log.supervisor_comment}
+                          </div>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -340,6 +417,8 @@ export default function StudentDashboard() {
             </div>
           </section>
         )}
+
+        {grade && grade.published && <GradeCard grade={grade} />}
       </main>
     </div>
   );
