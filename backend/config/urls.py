@@ -22,15 +22,12 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from internship.views import (
     
-<<<<<<< HEAD
     #RegisterView,ForgotPasswordView, 
     EvaluationDetailView,
     FinalGradeCreateView,
-=======
     RegisterView,
     RequestPasswordResetView,
     ConfirmPasswordResetView,
->>>>>>> d655a0548dc7b4da30048b3f3cc20ab6a605c731
     LoginView,
     PlacementListView, PlacementDetailView,
     WeeklyLogListView, WeeklyLogDetailView,

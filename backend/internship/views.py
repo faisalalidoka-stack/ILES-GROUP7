@@ -244,35 +244,35 @@ class FinalGradeCreateView(APIView):
         academic_score = request.data.get('academic_score', 0)
         remarks = request.data.get('remarks', '')
         #Validate placement exists and belongs to this supervisor
-    try:
-          placement = Placement.objects.get(pk=placement_id, academic_supervisor=request.user)
-    except Placement.DoesNotExist:
-        return Response({'error':'Placement not found or not assigned to you'}, status=404)  
+        try:
+             placement = Placement.objects.get(pk=placement_id, academic_supervisor=request.user) 
+        except Placement.DoesNotExist:
+                    return Response({'error':'Placement not found or not assigned to you'}, status=404)  
         #Prevent double submission - check if grade already exists
-    if hasattr(placement, 'final_grade') and placement.final_grade.published:
-        return Response({'error': 'Grade already published for this placement'}, status=400) 
+        if hasattr(placement, 'final_grade') and placement.final_grade.published:
+             return Response({'error': 'Grade already published for this placement'}, status=400) 
     #Check WP evaluation is submitted before grading
-    wp_eval_exists = EvaluationForm.objects.filter(placement=placement,status__in=['Submitted', 'Reviewed']).exists()
+    wp_eval_exists = EvaluationForm.objects.filter(placement=placement,status__in=['Submitted', 'Reviewed']).exists()   
     if not wp_eval_exists:
-        return Response({'error':'Workplace supervisor evaluation must be submitted before grading'},status=400)
+             return Response({'error':'Workplace supervisor evaluation must be submitted before grading'},status=400)
     #get_or_create prevents duplicate grades at application level too
     grade, created = FinalGrade.objects.get_or_create(
         placement=placement, defaults={'computed_by': request.user, 'academic_score': float(academic_score), 'remarks': remarks}
-    )
+    )  
     if not created:
         #Update existing draft grade
         grade.academic_score = float(academic_score)
         grade.remarks = remarks
         grade.computed_by = request.user
-        grade.save( #triggers compute_weighted_score() automatically
-            return Response({'success':True,
+        grade.save() #triggers compute_weighted_score() automatically
+        return Response({'success':True,
                               'grade': FinalGradeSerializer(grade).data,
                                 'breakdown':{
                                     'formula': 'technical(*4)+ communication(*3)+ punctuality(*3)',
                                       'computed_score':grade.score,
                                         'grade_letter':grade.grade_letter,
                                           'note': 'Score auto-computed from WP evaluation form'}
-                                          },status=201 if created else 200)'}}))
+                                          },status=201 if created else 200)
 
         s = FinalGradeSerializer(data=request.data)
         if s.is_valid():
