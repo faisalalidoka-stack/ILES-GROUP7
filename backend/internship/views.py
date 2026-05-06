@@ -264,16 +264,21 @@ class FinalGradeCreateView(APIView):
         grade.academic_score = float(academic_score)
         grade.remarks = remarks
         grade.computed_by = request.user
-        grade.save()  #triggers compute_weighted_score() automatically
-    
-    return Response({'success': True,
-                     'grade': FinalGradeSerializer(grade).data,
-                     'breakdown': {
-                         'formula': 'technical(*4)+ communication(*3)+ punctuality(*3)',
-                         'computed_score': grade.score,
-                         'grade_letter': grade.grade_letter,
-                         'note': 'Score auto-computed from WP evaluation form'}
-                     }, status=201 if created else 200)
+        grade.save( #triggers compute_weighted_score() automatically
+            return Response({'success':True,
+                              'grade': FinalGradeSerializer(grade).data,
+                                'breakdown':{
+                                    'formula': 'technical(*4)+ communication(*3)+ punctuality(*3)',
+                                      'computed_score':grade.score,
+                                        'grade_letter':grade.grade_letter,
+                                          'note': 'Score auto-computed from WP evaluation form'}
+                                          },status=201 if created else 200)'}}))
+
+        s = FinalGradeSerializer(data=request.data)
+        if s.is_valid():
+            s.save(computed_by=request.user)
+            return Response(s.data, status=201)
+        return Response(s.errors, status=400)
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]

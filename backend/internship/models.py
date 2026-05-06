@@ -17,6 +17,7 @@ from .constants import (ROLE_CHOICES, LOG_STATUSES,
                         VALID_PLACEMENT_TRANSITIONS, 
                         VALID_EVAL_TRANSITIONS, 
                         VALID_LOG_TRANSITIONS )
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 class User(AbstractUser):
     """Custom user model.
@@ -30,6 +31,8 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     #now both these fields will be asked for when creating super user
     REQUIRED_FIELDS = ['username','role']
+    profile_picture = models.ImageField( upload_to='profile_pictures/', null=True, blank=True)
+
 
     
     # High-level user type used throughout the app (e.g., STUDENT/COMPANY/ADMIN).
@@ -37,7 +40,7 @@ class User(AbstractUser):
 
     def __str__(self) -> str:
         return f"{self.username} ({self.role})"
-    profile_picture = models.ImageField( upload_to='profile_pictures/', null=True, blank=True)
+    
 
 
 class WeeklyLog(models.Model):
@@ -144,7 +147,27 @@ class Placement(models.Model):
         self.save()
 
     def __str__(self):
-        return f"{self.student.username} at {self.company_name} ({self.status})"  
+        return f"{self.student.username} at {self.company_name} ({self.status})" 
+
+    def clean(self):
+        if self.start_date and self.end_date:
+        if self.starts_date >= self.end_date:
+            raise DjangoValidationError("End date must be after start date.") 
+        overlapping = Placement.objects.filter(
+            student=self.student,
+            start_date__It=self.end_date,
+            end_date__gt=self.start_date,
+            status__in=['Pending', 'Active']
+        ).exclude(pk=self.pk)
+        if overlapping.exists():
+            conflict = overlapping.first()
+            raise DjangoValidationError(
+                f"Overlapping placement exists at {conflict.company_name}"
+                f"({conflict.start_date} - {conflict.end_date})."
+            )
+        
+    def save(self,*args, **kwargs):
+        self.full_clean() #triggers clean() before every save super().save(*args, **kwargs)  
 
 
 class FinalGrade(models.Model):

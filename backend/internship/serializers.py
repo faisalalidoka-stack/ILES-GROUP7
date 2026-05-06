@@ -26,7 +26,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta: #this is an inner class i use to provide meta data or configuration data about the main class
         model = User
-        fields = ['id','username','email','role',]
+        fields = ['id','username','email','role','profile_picture']
+
         #im not including the password fied coz this would expose it 
 
 #now the placement serializer
@@ -56,6 +57,41 @@ class PlacementSerializer(serializers.ModelSerializer):
     class Meta:
         model = Placement
         fields = '__all__'
+
+        def validate(self, data):
+"""Prevent a student from having two placements with overlapping date ranges.
+Runs errors saving - raises ValidateError if overlap detected.
+Overlap logic: two date ranges [A_start, A_end] and [B_start, B_end] overlap if: A_start <= B-end AND A_end >=B_start"""
+            student = data.get('student')
+            start_date = data.get('start_date')
+            end_date = data.get('end_gate')
+        #Basic date order check    
+            if start_date and end_date and start_date >=end_date:
+                raise serializers.ValidationError({
+                    "end_date": "End date must be after start date."
+                 })
+            if student and start_date and end_date:
+    #Exclude the current instance when updating (not just creating)
+                instance_id - self.instance.id if self.instance else None 
+                overlapping = Placement.objects.filter(
+                    student = student,
+                    start_date__It=end_date, #existing starts before new one ends
+                    end_date__gt=start_date, #existing ends after new one starts
+                    status__in=['Pending', 'Active'] #only check active placements
+                ).exclude(id=instance_id)
+            if overlapping.exists():
+                conflict = overlapping.first()
+                raise serializers.ValidationError({
+                    "start_date": (
+                        f"This student already has a placement at {conflict.company_name}"
+                        f"from {conflict.start_date} to {conflict.end_date}."
+                        f"Dates must not overlap."
+                    )
+                })
+        return data 
+
+
+
 
 class WeeklyLogSerializer(serializers.ModelSerializer):
     student = UserSerializer(read_only=True)
