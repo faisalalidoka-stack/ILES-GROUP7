@@ -22,7 +22,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from internship.views import (
     
-    ForgotPasswordView, 
+    
     EvaluationDetailView,
     FinalGradeCreateView,
     RegisterView,
@@ -56,7 +56,7 @@ urlpatterns = [
     path('logs/', WeeklyLogListView.as_view(), name='weeklylog-list'),
     #and their details
     path('logs/<int:pk>/', WeeklyLogDetailView.as_view(), name='weeklylog-detail'),
-    path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
+    
 
 
     #for the token refresh
