@@ -153,7 +153,9 @@ STATIC_URL = 'static/'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://my-vercel-app.vercel.app",#to replcae with actual domain when deployed
-    "https://iles-group7.onrender.com"
+    "https://iles-group7.onrender.com",
+    "https://iles-group-7.vercel.app"
+
 
 ]
 

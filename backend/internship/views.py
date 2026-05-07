@@ -461,7 +461,7 @@ class FlagCreateView(APIView):
         return Response(s.errors, status=400)
     
 
-class UserListView(ApiView):
+class UserListView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
