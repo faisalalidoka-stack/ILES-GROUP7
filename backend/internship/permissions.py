@@ -5,7 +5,7 @@ class IsStudentOnly(BasePermission):
         return bool(request.user and request.user.is_authenticated and request.user.role == 'STUDENT')
 
 class IsWorkplaceSupervisorOnly(BasePermission):
-    def has_permsission(self, request, view):
+    def has_permissions(self, request, view):
         return bool(request.user and request.user.is_authenticated and request.user.role == 'WORKPLACE_SUPERVISOR')
     
 class IsAcademicSupervisorOnly(BasePermission):

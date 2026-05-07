@@ -144,3 +144,6 @@ export const createFlag = (data) => apiFetch('/flags/', {
     method: 'POST',
     body: JSON.stringify(data)
 });
+
+export const publishGrade = (id) =>
+apiFetch(`/grades/${id}/publish/`, { method: 'POST' });

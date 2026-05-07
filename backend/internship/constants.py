@@ -56,12 +56,14 @@ EVAL_STATUSES = [
     ('Draft', 'Draft'),
     ('Submitted', 'Submitted'),
     ('Reviewed', 'Reviewed'),
+    ('Approved','Approved'),
 ]
 
 VALID_EVAL_TRANSITIONS = {
     "Draft": ["Submitted"],
     "Submitted": ["Reviewed"],
-    "Reviewed": []
+    "Reviewed": ["Approved"],
+    "Approved": []
 }
 
 

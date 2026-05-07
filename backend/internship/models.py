@@ -86,12 +86,10 @@ class WeeklyLog(models.Model):
                 )
             
     def save(self, *args, **kwargs):
-        from django.utils import timezone
-        #Auto-set submitted_at when status changes to 'Submitted'
         if self.status == 'Submitted' and not self.submitted_at:
             self.submitted_at = timezone.now()
-        self.full_clean(#runs clean()before every save
-        super().save(*args, **kwargs))
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def change_status(self, new_status):
         validate_transition(self.status, new_status, VALID_LOG_TRANSITIONS)
@@ -173,11 +171,11 @@ class Placement(models.Model):
 
     def clean(self):
         if self.start_date and self.end_date:
-            if self.starts_date >= self.end_date:
+            if self.start_date >= self.end_date:
                raise DjangoValidationError("End date must be after start date.") 
         overlapping = Placement.objects.filter(
             student=self.student,
-            start_date__It=self.end_date,
+            start_date__lt=self.end_date,
             end_date__gt=self.start_date,
             status__in=['Pending', 'Active']
         ).exclude(pk=self.pk)
@@ -188,9 +186,9 @@ class Placement(models.Model):
                 f"({conflict.start_date} - {conflict.end_date})."
             )
         
-    def save(self,*args, **kwargs):
-        self.full_clean() #triggers clean() before every save super().save(*args, **kwargs)  
-
+    def save(self, *args, **kwargs):
+        self.full_clean() 
+        super().save(*args, **kwargs) 
 
 class FinalGrade(models.Model):
     placement = models.OneToOneField(Placement, on_delete=models.CASCADE, related_name='final_grade')
@@ -215,7 +213,9 @@ class FinalGrade(models.Model):
         Academic supervisor's score is stored separately for reference but the weighted formula uses WP eval scores."""
         try:
             wp_eval = EvaluationForm.objects.filter(placement=self.placement, status__in=['Submitted', 'Reviewed']
-                                                    ).latest('submitted_at')
+                                                    ).order_by('-submitted_at').first() #get the latest submitted evaluation for this placement
+            if not wp_eval:
+                return round(self.academic_score, 2) #if no evaluation found, fallback to academic score as final grade
             technical = wp_eval.technical_skills #0-10
             communication = wp_eval.communication_skills #0-10
             punctuality = wp_eval.punctuality #0-10 
@@ -267,8 +267,8 @@ class Notification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     class Meta:
         ordering = ['-created_at']
-        def __str__(self):
-            return f"Notification for {self.recipient.username}: {self.message[:40]}"
+    def __str__(self):
+        return f"Notification for {self.recipient.username}: {self.message[:40]}"
         
 class Flag(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='flags', limit_choices_to={'role':'STUDENT'}
