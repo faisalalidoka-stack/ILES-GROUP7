@@ -13,11 +13,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     // Redirect to appropriate dashboard based on user's actual role
     const roleRoutes = {
-      STUDENT: "/student",
-      WORKPLACE_SUPERVISOR: "/supervisor",
-      ACADEMIC_SUPERVISOR: "/academic",
-      INTERNSHIP_ADMIN: "/admin",
-    };
+      STUDENT: '/student',
+      WORKPLACE_SUPERVISOR: '/workplace-supervisor',
+      ACADEMIC_SUPERVISOR: '/academic-supervisor',
+      INTERNSHIP_ADMIN: '/admin',
+      };
     const destination = roleRoutes[user.role] || "/";
     return <Navigate to={destination} replace />;
   }

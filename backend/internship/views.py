@@ -8,15 +8,16 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import User, Placement, WeeklyLog, EvaluationForm, FinalGrade
 from .serializers import (
     PlacementSerializer, WeeklyLogSerializer, EvaluationFormSerializer, FinalGradeSerializer,
-    RegisterSerializer,
+    RegisterSerializer,NotificationSerializer,FlagSerializer,UserSerializer
 )
-from .services import login_user
+from .services import login_user, create_notification
 #i added thse to make our forgot password safer by using djangos built in
 #token generator and email functionality
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
+from decouple import config as env_config
 # Create your views here.
 
 #We use DRF's APIView class so weget JSON parsing authentication checking and error formatting for free
@@ -168,10 +169,8 @@ class EvaluationListView(APIView):
         if role == 'WORKPLACE_SUPERVISOR':
             qs = EvaluationForm.objects.filter(submitted_by=request.user)
         elif role == 'ACADEMIC_SUPERVISOR':
-            qs = EvaluationForm.objects.filter(
-            placement__workplace_supervisor=request.user
-        )
-        elif role == 'INTERNSHIP ADMIN':
+            qs = EvaluationForm.objects.filter(placement__academic_supervisor=request.user)
+        elif role == 'INTERNSHIP_ADMIN':
             qs = EvaluationForm.objects.all()
         else:
             qs = EvaluationForm.objects.filter(placement__student=request.user)
@@ -216,19 +215,22 @@ class EvaluationDetailView(APIView):
         s = EvaluationFormSerializer(obj, data=request.data, partial=True)
         if s.is_valid():
             s.save()
-            return Response(EvaluationFormSerializer(obj).data)
+            return Response(s.errors, status=400)
+        return Response(EvaluationFormSerializer(obj).data)
         
  #and finally the final grade endpoint
 class FinalGradeView(APIView):
     permission_classes= [IsAuthenticated]
 
     def get(self, request):
-        qs = FinalGrade.objects.filter(
-            placement__student=request.user,
-            published=True
-        )       
-        return Response(FinalGradeSerializer(qs, many=True).data)
-    
+        role = request.user.role
+        if role == 'STUDENT':
+            qs = FinalGrade.objects.filter(placement__student=request.user, published=True)
+        elif role == 'ACADEMIC_SUPERVISOR':
+            qs = FinalGrade.objects.filter(placement__academic_supervisor=request.user)
+        else:
+            qs = FinalGrade.objects.all()
+        return Response(FinalGradeSerializer(qs, many=True).data)            
 class FinalGradeCreateView(APIView):
     """POST/grades/create/
     Academic supervisor submits the final grade for a student.
@@ -238,47 +240,84 @@ class FinalGradeCreateView(APIView):
 
     def post(self, request):
         if request.user.role != 'ACADEMIC_SUPERVISOR':
-            return Response({'error':'Only academic supervisors can  submit grades'}, status=403
+            return Response(
+                {'error': 'Only academic supervisors can submit grades'},
+                status=403
             )
+
         placement_id = request.data.get('placement')
         academic_score = request.data.get('academic_score', 0)
         remarks = request.data.get('remarks', '')
-        #Validate placement exists and belongs to this supervisor
-        try:
-             placement = Placement.objects.get(pk=placement_id, academic_supervisor=request.user) 
-        except Placement.DoesNotExist:
-                    return Response({'error':'Placement not found or not assigned to you'}, status=404)  
-        #Prevent double submission - check if grade already exists
-        if hasattr(placement, 'final_grade') and placement.final_grade.published:
-             return Response({'error': 'Grade already published for this placement'}, status=400) 
-    #Check WP evaluation is submitted before grading
-    wp_eval_exists = EvaluationForm.objects.filter(placement=placement,status__in=['Submitted', 'Reviewed']).exists()   
-    if not wp_eval_exists:
-             return Response({'error':'Workplace supervisor evaluation must be submitted before grading'},status=400)
-    #get_or_create prevents duplicate grades at application level too
-    grade, created = FinalGrade.objects.get_or_create(
-        placement=placement, defaults={'computed_by': request.user, 'academic_score': float(academic_score), 'remarks': remarks}
-    )  
-    if not created:
-        #Update existing draft grade
-        grade.academic_score = float(academic_score)
-        grade.remarks = remarks
-        grade.computed_by = request.user
-        grade.save() #triggers compute_weighted_score() automatically
-        return Response({'success':True,
-                              'grade': FinalGradeSerializer(grade).data,
-                                'breakdown':{
-                                    'formula': 'technical(*4)+ communication(*3)+ punctuality(*3)',
-                                      'computed_score':grade.score,
-                                        'grade_letter':grade.grade_letter,
-                                          'note': 'Score auto-computed from WP evaluation form'}
-                                          },status=201 if created else 200)
 
-        s = FinalGradeSerializer(data=request.data)
-        if s.is_valid():
-            s.save(computed_by=request.user)
-            return Response(s.data, status=201)
-        return Response(s.errors, status=400)
+        # Convert academic_score safely
+        try:
+            academic_score = float(academic_score)
+        except (TypeError, ValueError):
+            return Response(
+                {'error': 'Academic score must be a valid number'},
+                status=400
+            )
+
+        # Validate placement exists and belongs to this supervisor
+        try:
+            placement = Placement.objects.get(
+                pk=placement_id,
+                academic_supervisor=request.user
+            )
+        except Placement.DoesNotExist:
+            return Response(
+                {'error': 'Placement not found or not assigned to you'},
+                status=404
+            )
+
+        # Prevent double submission if final grade is already published
+        if hasattr(placement, 'final_grade') and placement.final_grade.published:
+            return Response(
+                {'error': 'Grade already published for this placement'},
+                status=400
+            )
+
+        # Check workplace supervisor evaluation is submitted before grading
+        wp_eval_exists = EvaluationForm.objects.filter(
+            placement=placement,
+            status__in=['Submitted', 'Reviewed']
+        ).exists()
+
+        if not wp_eval_exists:
+            return Response(
+                {'error': 'Workplace supervisor evaluation must be submitted before grading'},
+                status=400
+            )
+
+        # Create or update final grade
+        grade, created = FinalGrade.objects.get_or_create(
+            placement=placement,
+            defaults={
+                'computed_by': request.user,
+                'academic_score': academic_score,
+                'remarks': remarks,
+            }
+        )
+
+        if not created:
+            grade.academic_score = academic_score
+            grade.remarks = remarks
+            grade.computed_by = request.user
+            grade.save()
+
+        return Response(
+            {
+                'success': True,
+                'grade': FinalGradeSerializer(grade).data,
+                'breakdown': {
+                    'formula': 'technical(*4) + communication(*3) + punctuality(*3)',
+                    'computed_score': grade.score,
+                    'grade_letter': grade.grade_letter,
+                    'note': 'Score auto-computed from WP evaluation form'
+                }
+            },
+            status=201 if created else 200
+        )
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -311,7 +350,11 @@ class RequestPasswordResetView(APIView):
             
             #this is the link we send to the user
             #it enables them to strt the reset process
-            reset_link = f"http://localhost:3000/reset-password/{uid}/{token}/"
+            FRONTEND_URL = env_config('FRONTEND_URL', default='http://localhost:5173')
+            reset_link = f'{FRONTEND_URL}/reset-password/{uid}/{token}/'
+            FRONTEND_URL='http://localhost:5173'
+            # On Render add environment variable:
+            FRONTEND_URL='https://your-app.vercel.app'
             
             #we now send then an email with the reset password link
             send_mail(
@@ -368,24 +411,64 @@ class ConfirmPasswordResetView(APIView):
         
         return Response({'error': 'The reset link is invalid or has expired please try again.'}, status=400)
     
-    class PublishGradeView(APIView):
-        permission_classes = [IsAuthenticated]
-        def post (self,request, pk):
-            if request.user.role != 'INTERNSHIP_ADMIN':
-                return Response({'error':'Admin Only'}, status=403)
-            try:
-                grade = FinalGrade.objects.get(pk=pk)
-            except FinalGrade.DoesNotExist:
-                return Response({'error':'Grade not found'}, status=404)
-            grade.published = True
-            grade.save()
-            placement = grade.placement
-            try:
-                placement.change_status('Completed')
-            except Exception:
-                pass #already Completed is fine
-            create_notification(
-                placement.student,
-                f"Your final grade has been published. Score: {grade.score} ({grade.grade_letters})"
+
+class NotificationListView(APIView):
+    permission_classes = [IsAuthenticated ]
+    def get(self, request):
+        qs = request.user.notifications.all()
+        return Response(NotificationSerializer(qs, many=True).data)
+class NotificationDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+    def patch(self, request, pk):
+        try:
+            notif = request.user.notifications.get(pk=pk)
+        except Exception:
+            return Response({'error':'Notification not found'}, status=404) 
+        notif.read = True
+        notif.save()
+        return Response(NotificationSerializer(notif).data)    
+
+    
+class PublishGradeView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post (self,request, pk):
+        if request.user.role != 'INTERNSHIP_ADMIN':
+            return Response({'error':'Admin Only'}, status=403)
+        try:
+            grade = FinalGrade.objects.get(pk=pk)
+        except FinalGrade.DoesNotExist:
+            return Response({'error':'Grade not found'}, status=404)
+        grade.published = True
+        grade.save()
+        placement = grade.placement
+        try:
+            placement.change_status('Completed')
+        except Exception:
+            pass #already Completed is fine
+        create_notification(
+            placement.student,
+                f"Your final grade has been published. Score: {grade.score} ({grade.grade_letter})"
             )
-            return Response (FinalGradeSerializer(grade).data)
+        return Response (FinalGradeSerializer(grade).data)
+    
+class FlagCreateView(APIView):
+    permision_classes = [IsAuthenticated]
+    def post(self, request):
+        s = FlagSerializer(data=request.data)
+        if s.is_valid():
+            s.save(raised_by=request.user)
+            return Response(s.data, status=201)
+        return Response(s.errors, status=400)
+    
+
+class UserListView(ApiView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        role = request.query_params.get('role')
+        if role:
+            qs = User.objects.filter(role=role)
+        return Response(UserSerializer(qs, many=True).data)    
+
+
+

@@ -2,6 +2,7 @@ import { useState } from "react"; // We are calling react hook (useState) to rem
 import { useNavigate } from "react-router-dom"; //useNavigate hook enables navigation to diff pages after succesful login based on user role.
 import { loginUser, saveToken, saveUser } from "../services/api";
 import "./Login.css"; // Importing CSS for styling 
+import { Link } from 'react-router-dom';
  
 //these are the state variables to store user input and ui status
 function Login() {                               // component (login)
@@ -109,6 +110,10 @@ function Login() {                               // component (login)
         >
           {loading ? "Logging in..." : "Login"}
         </button>
+        <div className='login-links'>
+          <Link to='/register'>Don't have an account? Sign up</Link>
+          <Link to='/forgot-password'>Forgot your password?</Link>
+        </div>
       </div>
     </div>
   );

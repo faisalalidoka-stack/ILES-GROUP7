@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUser, logOut, getPlacements, getWeeklyLogs, getGrades, getEvaluations } from '../services/api';
+import { getUser, logOut, getPlacements, getWeeklyLogs, getGrades, getEvaluations, createGrade } from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './AcademicSupervisorDashboard.css';
 
@@ -11,7 +11,7 @@ export default function AcademicSupervisorDashboard() {
   const [evaluations, setEvaluations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [gradeForm, setGradeForm] = useState({ placement: '', score: '', remarks: '' });
+  const [gradeForm, setGradeForm] = useState({ placement: '', academic_score: '', remarks: '' });
   const [gradeMsg, setGradeMsg] = useState('');
   const [activePlacementId, setActivePlacementId] = useState(null);
 
@@ -49,7 +49,7 @@ export default function AcademicSupervisorDashboard() {
       await createGrade(gradeForm);
       setGradeMsg('Grade submitted successfully!');
       setActivePlacementId(null);
-      setGradeForm({ placement: '', score: '', remarks: '' });
+      setGradeForm({ placement: placementId, score: '', remarks: '' });
       const data = await getGrades();
       setGrades(data.results ?? data);
       setTimeout(() => setGradeMsg(''), 3000);
@@ -110,10 +110,12 @@ export default function AcademicSupervisorDashboard() {
               ))}
               <h3 className='as-section-hdr'>Evaluation Scores</h3>
               {stuGrades.map(g => (
-                <div key={g.id} className='as-scores'>
-                  <ScoreBar label='Technical' value={g.technical_skills} />
-                  <ScoreBar label='Communication' value={g.communication_skills} />
-                  <ScoreBar label='Punctuality' value={g.punctuality} />
+                <div key={g.id} className="as-scores-summary">
+                  <p><strong>Final Score:</strong> {g.score}/100 ({g.grade_letter})</p>
+                  <p><strong>Academic Score:</strong> {g.academic_score}</p>
+                  <p><strong>Published:</strong> {g.published ? 'Yes' : 'No'}</p>
+                  
+                  <p><strong>Remarks:</strong> {g.remarks}</p>
                 </div>
               ))}
               {!hasGrade && (
@@ -141,7 +143,7 @@ export default function AcademicSupervisorDashboard() {
                       />
                       <input type='hidden' name='placement' value={p.id} />
                       <div className='as-grade-actions'>
-                        <button onClick={handleGradeSubmit}>Submit Grade</button>
+                        <button onClick={handleGradeSubmit(p.id)}>Submit Grade</button>
                         <button onClick={() => setActivePlacementId(null)}>Cancel</button>
                       </div>
                     </div>
