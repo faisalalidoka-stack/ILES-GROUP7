@@ -63,7 +63,7 @@ export default function AdminDashboard() {
   } catch (err) { setFormMsg('Error: ' + err.message); }
   };
 
-  export const getUsers = (role) => apiFetch(`/users/${role ? '?role='+role : ''}`)
+  const getUsers = (role) => apiFetch(`/users/${role ? '?role='+role : ''}`)
 
   const handleActivate = (id) => {
     updatePlacement(id, { status: 'Active' })
