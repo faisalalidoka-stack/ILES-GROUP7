@@ -17,6 +17,7 @@ from .constants import (ROLE_CHOICES, LOG_STATUSES,
                         VALID_PLACEMENT_TRANSITIONS, 
                         VALID_EVAL_TRANSITIONS, 
                         VALID_LOG_TRANSITIONS )
+from django.core.exceptions import ValidationError as DjangoValidationError
 
 class User(AbstractUser):
     """Custom user model.
@@ -30,6 +31,8 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     #now both these fields will be asked for when creating super user
     REQUIRED_FIELDS = ['username','role']
+    profile_picture = models.ImageField( upload_to='profile_pictures/', null=True, blank=True)
+
 
     
     # High-level user type used throughout the app (e.g., STUDENT/COMPANY/ADMIN).
@@ -37,7 +40,7 @@ class User(AbstractUser):
 
     def __str__(self) -> str:
         return f"{self.username} ({self.role})"
-    profile_picture = models.ImageField( upload_to='profile_pictures/', null=True, blank=True)
+    
 
 
 class WeeklyLog(models.Model):
@@ -50,16 +53,16 @@ class WeeklyLog(models.Model):
     # Which student this log belongs to.
     student = models.ForeignKey(User,
     on_delete=models.CASCADE,
-    limit_choices_to={'role': 'STUDENT'})
+    related_name='logs')
 
     # Week number within the internship period (e.g., 1..12).
-    week = models.IntegerField()
+    week = models.PositiveIntegerField()
 
     # Free-form summary of tasks completed this week.
     description = models.TextField()
     status = models.CharField(max_length=20, choices= LOG_STATUSES, default="Draft")
     placement = models.ForeignKey('Placement', on_delete=models.SET_NULL, null=True, blank=True, related_name='logs')
-    hours = models.FloatField(default=0)
+    hours = models.PositiveIntegerField(default=0)
 
     skills = models.TextField(blank=True)
     challenges = models.TextField(blank=True)
@@ -69,18 +72,38 @@ class WeeklyLog(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def clean(self):
+        """Validate submission deadline.
+        Students cannot submit a log after their placement end_date."""
+        from django.utils import timezone
+        from django.core.exceptions import ValidationError as DjangoValidationError
+
+        if self.placement and self.placement.end_date:
+            today = timezone.now().date()
+            if today > self.placement.end_date:
+                raise DjangoValidationError(
+                    f"Cannot submit logs after internship end date({self.placement.end_date})."
+                )
+            
+    def save(self, *args, **kwargs):
+        if self.status == 'Submitted' and not self.submitted_at:
+            self.submitted_at = timezone.now()
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     def change_status(self, new_status):
         validate_transition(self.status, new_status, VALID_LOG_TRANSITIONS)
         self.status = new_status
-        if new_status == 'Submitted':
-            self.submitted_at = timezone.now()
         self.save()
     
     def __str__(self) :
-        return f"Week {self.week} - {self.student.username} ({self.status})"
+        return f"Week {self.week} log by {self.student.username} [{self.status}]"
     #this class tells django that the student and week combination must be unique and never duplicate
     class Meta:
-        unique_together = ('student','week')
+        unique_together = ('student','week', 'placement')
+        #Ensures one log per student per week per placement
+        #A student cannot submit two logs for the same week
+        ordering = ['week']
     
 class EvaluationForm(models.Model):
     placement = models.ForeignKey('Placement', on_delete=models.CASCADE, related_name='evaluations')
@@ -135,7 +158,7 @@ class Placement(models.Model):
     #deadline enforcemennt
     deadline = models.DateField(null=True, blank=True)
     address = models.CharField(max_length=500, blank=True)
-    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, relatedname='approved_placements', limit_choices_to={'role': 'INTERNSHIP_ADMIN'})
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_placements', limit_choices_to={'role': 'INTERNSHIP_ADMIN'})
     
 
     def change_status(self, new_status):
@@ -144,8 +167,28 @@ class Placement(models.Model):
         self.save()
 
     def __str__(self):
-        return f"{self.student.username} at {self.company_name} ({self.status})"  
+        return f"{self.student.username} at {self.company_name} ({self.status})" 
 
+    def clean(self):
+        if self.start_date and self.end_date:
+            if self.start_date >= self.end_date:
+               raise DjangoValidationError("End date must be after start date.") 
+        overlapping = Placement.objects.filter(
+            student=self.student,
+            start_date__lt=self.end_date,
+            end_date__gt=self.start_date,
+            status__in=['Pending', 'Active']
+        ).exclude(pk=self.pk)
+        if overlapping.exists():
+            conflict = overlapping.first()
+            raise DjangoValidationError(
+                f"Overlapping placement exists at {conflict.company_name}"
+                f"({conflict.start_date} - {conflict.end_date})."
+            )
+        
+    def save(self, *args, **kwargs):
+        self.full_clean() 
+        super().save(*args, **kwargs) 
 
 class FinalGrade(models.Model):
     placement = models.OneToOneField(Placement, on_delete=models.CASCADE, related_name='final_grade')
@@ -159,7 +202,7 @@ class FinalGrade(models.Model):
     grade_letter = models.CharField(max_length=5, blank=True)
     published = models.BooleanField(default=False)
     computed_at = models.DateTimeField(auto_now_add=True)
-    remarks - models.TextField(blank=True)
+    remarks = models.TextField(blank=True)
 
     def compute_weighted_score(self):
         """Weighted formula (matches course outline Week 9):
@@ -170,7 +213,9 @@ class FinalGrade(models.Model):
         Academic supervisor's score is stored separately for reference but the weighted formula uses WP eval scores."""
         try:
             wp_eval = EvaluationForm.objects.filter(placement=self.placement, status__in=['Submitted', 'Reviewed']
-                                                    ).latest('submitted_at')
+                                                    ).order_by('-submitted_at').first() #get the latest submitted evaluation for this placement
+            if not wp_eval:
+                return round(self.academic_score, 2) #if no evaluation found, fallback to academic score as final grade
             technical = wp_eval.technical_skills #0-10
             communication = wp_eval.communication_skills #0-10
             punctuality = wp_eval.punctuality #0-10 
@@ -207,7 +252,7 @@ class FinalGrade(models.Model):
 class LogReview(models.Model):
     log = models.ForeignKey(WeeklyLog, on_delete = models.CASCADE, related_name='reviews')  
     supervisor = models.ForeignKey(User, on_delete = models.SET_NULL, null = True, related_name = 'log_reviews')
-    decision = models.Charfield(max_length = 20, choices= [('Approved', 'Approved'),('Rejected', 'Rejected')]
+    decision = models.CharField(max_length = 20, choices= [('Approved', 'Approved'),('Rejected', 'Rejected')]
                                 )      
     comment = models.TextField(blank = True)
     reviewed_at = models.DateTimeField(auto_now_add = True)
@@ -222,15 +267,15 @@ class Notification(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     class Meta:
         ordering = ['-created_at']
-        def __str__(self):
-            return f"Notification for {self.recipient.username}: {self.message[:40]}"
+    def __str__(self):
+        return f"Notification for {self.recipient.username}: {self.message[:40]}"
         
 class Flag(models.Model):
-    student = models.ForeinKey(User, on_delete=models.CASCADE, related_name='flags', limit_choices_to={'role':'STUDENT'}
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='flags', limit_choices_to={'role':'STUDENT'}
                                )
-    raised_by = models.ForeignKey(User, on_delete=models,SET_NULL, null=True, related_name='raised_flags')
+    raised_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='raised_flags')
     reason = models.TextField()
-    created_at = models.DataTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     def __str__(self):
         return f"Flag on {self.student.username} by {self.raised_by}"
 

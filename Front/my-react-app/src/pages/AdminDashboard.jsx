@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { logOut, getPlacements, updatePlacement, createPlacement } from '../services/api';
+import { getUser, logOut, getPlacements, updatePlacement, createPlacement, publishGrade } from '../services/api';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './AdminDashboard.css';
 
@@ -11,6 +11,9 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [stats, setStats] = useState(null);
+  const [students, setStudents] = useState([]);
+  const [wps, setWps] = useState([]);
+  const [academics, setAcademics] = useState([]);
 
   // Create placement form state
   const [showForm, setShowForm] = useState(false);
@@ -45,6 +48,22 @@ export default function AdminDashboard() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+
+  useEffect(() => {
+    getUsers('STUDENT').then(setStudents);
+    getUsers('WORKPLACE_SUPERVISOR').then(setWps);
+    getUsers('ACADEMIC_SUPERVISOR').then(setAcademics);
+  }, []);
+
+  const handlePublish = async (gradeId) => {
+  try {
+  await publishGrade(gradeId);
+  setFormMsg('Grade published successfully!');
+  } catch (err) { setFormMsg('Error: ' + err.message); }
+  };
+
+  const getUsers = (role) => apiFetch(`/users/${role ? '?role='+role : ''}`)
 
   const handleActivate = (id) => {
     updatePlacement(id, { status: 'Active' })
@@ -216,6 +235,13 @@ export default function AdminDashboard() {
                       Set Active
                     </button>
                   )}
+                </td>
+                <td>
+                  {p.final_grade && !p.final_grade.published && (
+                  <button onClick={() => handlePublish(p.final_grade.id)}>
+                    Publish Grade
+                  </button>
+                )}
                 </td>
               </tr>
             ))}

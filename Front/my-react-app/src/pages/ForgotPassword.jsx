@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { requestPasswordReset } from "../services/api";
 import { Link } from "react-router-dom";
-import "./Register.css";  // reuse the same styling as Register page
+import "./ForgotPassword.css";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -28,36 +28,31 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-box">
-        <h2>Forgot Password</h2>
-        <p className="auth-subtitle">Enter your email to receive a password reset link</p>
-
+    <div className="fp-container">
+      <div className="fp-box">
+        <h2 className="fp-title">Forgot Password</h2>
+        <p className="fp-subtitle">Enter your email to receive a reset link.</p>
+        <input
+          className="fp-input"
+          type="email"
+          placeholder="Email address"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+        />
+        <button
+          className={`fp-btn ${loading ? "fp-btn-loading" : ""}`}
+          onClick={handleSubmit}
+          disabled={loading}>
+          {loading ? "Sending..." : "Send Reset Link"}
+        </button>
         {message && (
-          <p className={isError ? "error-msg" : "success-msg"}>{message}</p>
+          <p className={`fp-msg ${isError ? "fp-msg-error" : "fp-msg-success"}`}>
+            {message}
+          </p>
         )}
-
-        <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            placeholder="Email address"
-            className="auth-input"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <button
-            type="submit"
-            className={`auth-btn ${loading ? "disabled" : ""}`}
-            disabled={loading}
-          >
-            {loading ? "Sending..." : "Send Reset Link"}
-          </button>
-        </form>
-
-        <p className="auth-link">
+        <div className="fp-back">
           <Link to="/">Back to Login</Link>
-        </p>
+        </div>
       </div>
     </div>
   );

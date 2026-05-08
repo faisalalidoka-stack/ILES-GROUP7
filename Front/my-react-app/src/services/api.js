@@ -1,4 +1,4 @@
-const BASE_URL = "http://127.0.0.1:8000";
+const BASE_URL = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 // --- Token & User Helpers ---
 export const saveToken = (token) => localStorage.setItem("iles_token", token);
@@ -144,3 +144,6 @@ export const createFlag = (data) => apiFetch('/flags/', {
     method: 'POST',
     body: JSON.stringify(data)
 });
+
+export const publishGrade = (id) =>
+apiFetch(`/grades/${id}/publish/`, { method: 'POST' });

@@ -7,9 +7,11 @@ import {
   logOut, 
   getUser,
   getPlacements,
-  getGrades
+  getGrades,
+  getNotifications, markNotificationRead,
 } from "../services/api";
 import "./StudentDashboard.css";
+
 
 const emptyForm = {
   week: "",
@@ -36,12 +38,23 @@ export default function StudentDashboard() {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [successMsg, setSuccessMsg] = useState("");
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifs, setShowNotifs] = useState(false);
 
   useEffect(() => {
     fetchLogs();
     fetchPlacement();
     fetchGrade();
   }, []);
+
+  getNotifications().then(setNotifications).catch(() => {});
+    const unread = notifications.filter(n => !n.is_read).length;
+    const handleNotifClick = async (id) => {
+    await markNotificationRead(id);
+    setNotifications(prev => prev.map(n =>
+    n.id === id ? { ...n, is_read: true } : n
+    ));
+  };
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -249,7 +262,21 @@ export default function StudentDashboard() {
           <a href="#" className="sd-nav-link active">📋 My Logs</a>
           <a href="#" className="sd-nav-link">👤 Profile</a>
           <a href="#" className="sd-nav-link">📊 Reports</a>
-          <a href="#" className="sd-nav-link">🔔 Notifications</a>
+          <button className='sd-nav-link' onClick={() => setShowNotifs(!showNotifs)}>
+                Notifications {unread > 0 && <span className='notif-badge'>{unread}</span>}
+          </button>
+          {showNotifs && (
+          <div className='notif-panel'>
+            {notifications.length === 0 && <p>No notifications</p>}
+            {notifications.map(n => (
+            <div key={n.id}
+                  className={n.is_read ? 'notif-read' : 'notif-unread'}
+                  onClick={() => handleNotifClick(n.id)}>
+                  {n.message}
+            </div>
+                ))}
+          </div>
+          )}
         </nav>
         <div className="sd-logout-wrapper">
            <button className="sd-logout-btn" onClick={handleLogout}>

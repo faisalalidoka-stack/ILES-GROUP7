@@ -30,3 +30,7 @@ def login_user(email,password):
             'role': user.role,
         }
     }
+
+def create_notification(user, message):
+    from .models import Notification
+    Notification.objects.create(recipient=user, message=message)

@@ -22,19 +22,19 @@ from rest_framework_simplejwt.views import TokenRefreshView
 
 from internship.views import (
     
-<<<<<<< HEAD
-    #RegisterView,ForgotPasswordView, 
+    
     EvaluationDetailView,
     FinalGradeCreateView,
-=======
     RegisterView,
     RequestPasswordResetView,
     ConfirmPasswordResetView,
->>>>>>> d655a0548dc7b4da30048b3f3cc20ab6a605c731
     LoginView,
     PlacementListView, PlacementDetailView,
     WeeklyLogListView, WeeklyLogDetailView,
     EvaluationListView, FinalGradeView,
+    NotificationListView, NotificationDetailView, FlagCreateView,
+    PublishGradeView,
+    UserListView
 )
 #this is for admin as always
 urlpatterns = [
@@ -56,16 +56,24 @@ urlpatterns = [
     path('logs/', WeeklyLogListView.as_view(), name='weeklylog-list'),
     #and their details
     path('logs/<int:pk>/', WeeklyLogDetailView.as_view(), name='weeklylog-detail'),
+    
+
 
     #for the token refresh
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('flags/', FlagCreateView.as_view(), name='flag-create'),
+    path('users/', UserListView.as_view(), name='user-list'),
 
     #for the evaluations
     path('evaluations/', EvaluationListView.as_view(), name='evaluation-list'),
     path('evaluations/<int:pk>/', EvaluationDetailView.as_view(), name='evaluation-detail'),
 
+    path('notifications/', NotificationListView.as_view(), name='notification-list'),
+    path('notifications/<int:pk>/', NotificationDetailView.as_view(), name='notification-detail'),
+
     #now the final grade
     path('grades/', FinalGradeView.as_view(), name='final-grade'),
     path('grades/create/',FinalGradeCreateView.as_view(), name='grade-create'),
+    path('grades/<int:pk>/publish/', PublishGradeView.as_view(), name='grade-publish'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
