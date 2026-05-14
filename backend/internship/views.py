@@ -424,7 +424,7 @@ class NotificationDetailView(APIView):
             notif = request.user.notifications.get(pk=pk)
         except Exception:
             return Response({'error':'Notification not found'}, status=404) 
-        notif.read = True
+        notif.is_read = True
         notif.save()
         return Response(NotificationSerializer(notif).data)    
 
