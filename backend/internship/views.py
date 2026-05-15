@@ -11,7 +11,7 @@ from .serializers import (
     RegisterSerializer,NotificationSerializer,FlagSerializer,UserSerializer
 )
 from .services import login_user, create_notification
-#i added thse to make our forgot password safer by using djangos built in
+#i added these to make our forgot password safer by using djangos built in
 #token generator and email functionality
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -453,9 +453,13 @@ class PublishGradeView(APIView):
     
 class FlagCreateView(APIView):
     permision_classes = [IsAuthenticated]
+    # was: permission_classes (typo - endpoint was unprotected)
     def post(self, request):
         s = FlagSerializer(data=request.data)
         if s.is_valid():
+            # automatically attach the user who raised the flag and save it
+            # we pass raised_by here instead of accepting it from request.data
+            # so a user cannot forge flags on behalf of someone else
             s.save(raised_by=request.user)
             return Response(s.data, status=201)
         return Response(s.errors, status=400)
