@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUser, logOut, getPlacements, getWeeklyLogs, getGrades, getEvaluations, createGrade } from '../services/api';
+import { getUser, logOut, getPlacements, getWeeklyLogs, getGrades, getEvaluations, createGrade, publishGrade } from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import './AcademicSupervisorDashboard.css';
 
@@ -14,6 +14,8 @@ export default function AcademicSupervisorDashboard() {
   const [gradeForm, setGradeForm] = useState({ score: '', remarks: '' });
   const [gradeMsg, setGradeMsg] = useState('');
   const [activePlacementId, setActivePlacementId] = useState(null);
+  const [activeTab, setActiveTab] = useState('students');
+  const [publishMsg, setPublishMsg] = useState('');
 
   const navigate = useNavigate();
   const user = getUser();
@@ -88,14 +90,47 @@ export default function AcademicSupervisorDashboard() {
     <div className="as-root">
       <aside className="as-sidebar">
         <div className="as-logo">ILES</div>
-        <button className="as-logout" onClick={handleLogout}>Logout</button>
+        <nav style={{ display:'flex', flexDirection:'column', gap:8, marginTop:24 }}>
+          {[
+            { id:'students', label:'n Students & Logs' },
+            { id:'grades', label:'n Assign Grades' },
+            { id:'charts', label:'n Overview Chart' },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                className='as-logout'
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  backgroundColor: activeTab === tab.id ? '#4A6FA5' : '#EDE7F6',
+                  color: activeTab === tab.id ? '#fff' : '#2E4A7A',
+                  marginBottom: 0,
+                  
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+        </nav>
+        <button className="as-logout" style={{ marginTop:'auto' }} onClick={handleLogout}>Logout</button>
       </aside>
+      {activeTab === 'students' && placements.map(p => { /* existing card */ })}
+      {activeTab === 'grades' && placements.map(p => { /* grade form */ })}
+      {activeTab === 'charts' && getChartData().length > 0 && (
+        <div className='as-chart-box'>/* existing chart */</div>
+      )}
       <main className='as-main'>
         <h1 className='as-title'>
           Welcome, {user?.username || user?.email?.split('@')[0] || "Academic Supervisor"}
         </h1>
         {gradeMsg && <div className='as-success'>{gradeMsg}</div>}
+        {publishMsg && <div className='as-success'>{publishMsg}</div>}
+        
 
+        {placements.length === 0 && (
+  <div className="as-empty">
+    No students are currently assigned to you. Once the internship admin assigns students, they will appear here.
+  </div>
+)}
         {placements.map(p => {
           const stuLogs = logs.filter(l => l.placement === p.id);
           const stuGrades = grades.filter(g => g.placement === p.id);
@@ -118,8 +153,29 @@ export default function AcademicSupervisorDashboard() {
                   <p><strong>Academic Score:</strong> {g.academic_score}</p>
                   <p><strong>Published:</strong> {g.published ? 'Yes' : 'No'}</p>
                   <p><strong>Remarks:</strong> {g.remarks}</p>
+                  {!g.published && (
+                    <button
+                    className='as-grade-btn'
+                    style={{ background: '#E8F5E9', marginTop: 8 }}
+                    onClick={async () => {
+                      try {
+                        await publishGrade(g.id);
+                        setPublishMsg(`Grade for ${p.student?.username} published!`);
+
+                        const fresh = await getGrades();
+                        setGrades(Array.isArray(fresh) ? fresh : fresh.results ?? []);
+                        setTimeout(() => setPublishMsg(''), 3000);
+                        } catch (err) {
+                          setPublishMsg('Publish failed: ' + err.message);
+                        }
+                      }}
+                      >
+                        n Publish Grade to Student
+                      </button>
+        )}
                 </div>
-              ))}
+                ))
+              }
 
               {!hasGrade && (
                 <div className="as-grade-section">

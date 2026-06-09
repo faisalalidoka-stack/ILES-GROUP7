@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+<<<<<<< HEAD
 // Step 1: extended imports — added publishGrade + getGrades + getFlags
 import {
   getUser, logOut, getPlacements, updatePlacement, createPlacement,
@@ -16,6 +17,15 @@ const emptyPlacement = {
   end_date: '',
   workplace_supervisor_id: '',
   academic_supervisor_id: '',
+=======
+import { getUser, logOut, getPlacements, updatePlacement, createPlacement, getUsers, publishGrade } from '../services/api';
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import './AdminDashboard.css';
+
+const emptyPlacement = {
+  student_id: '', company_name: '', start_date: '',
+  end_date: '', workplace_supervisor_id: '', academic_supervisor_id: ''
+>>>>>>> 3c9ac258a83bade3cee5dffea4cf7cd8dbd433bb
 };
 
 export default function AdminDashboard() {
@@ -26,10 +36,12 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [stats, setStats] = useState(null);
-
   const [showForm, setShowForm] = useState(false);
   const [formMsg, setFormMsg] = useState('');
   const [newPlacement, setNewPlacement] = useState(emptyPlacement);
+  const [students, setStudents] = useState([]);
+  const [wps, setWps] = useState([]);
+  const [academics, setAcademics] = useState([]);
 
   const [students, setStudents] = useState([]);
   const [wps, setWps] = useState([]);
@@ -72,7 +84,24 @@ export default function AdminDashboard() {
         setError('Could not load dashboard. Please refresh.');
       })
       .finally(() => setLoading(false));
+
+    getUsers('STUDENT').then(d => setStudents(Array.isArray(d) ? d : d.results ?? [])).catch(() => {});
+    getUsers('WORKPLACE_SUPERVISOR').then(d => setWps(Array.isArray(d) ? d : d.results ?? [])).catch(() => {});
+    getUsers('ACADEMIC_SUPERVISOR').then(d => setAcademics(Array.isArray(d) ? d : d.results ?? [])).catch(() => {});
   }, []);
+
+  const handlePublish = async (gradeId) => {
+    try {
+      await publishGrade(gradeId);
+      setPlacements(prev => prev.map(p =>
+        p.final_grade?.id === gradeId
+          ? { ...p, final_grade: { ...p.final_grade, published: true } }
+          : p
+      ));
+    } catch (err) {
+      setError('Publish failed: ' + err.message);
+    }
+  };
 
   const handleActivate = (id) => {
     updatePlacement(id, { status: 'Active' })
@@ -144,6 +173,7 @@ export default function AdminDashboard() {
   const COLORS = ['#FBBF24', '#60A5FA', '#34D399', '#F87171'];
 
   const StatsPanel = () => {
+    if (!stats) return null;
     const pieData = [
       { name: 'Pending',   value: stats.pending },
       { name: 'Active',    value: stats.active },
@@ -220,7 +250,11 @@ export default function AdminDashboard() {
       )}
 
       <button className="admin-add-btn" onClick={() => setShowForm(!showForm)}>
+<<<<<<< HEAD
         {showForm ? 'Cancel' : '+ New Placement'}
+=======
+        {showForm ? "Cancel" : "+ New Placement"}
+>>>>>>> 3c9ac258a83bade3cee5dffea4cf7cd8dbd433bb
       </button>
 
       {showForm && (
@@ -308,6 +342,7 @@ export default function AdminDashboard() {
         <table className="ad-table">
           <thead>
             <tr>
+<<<<<<< HEAD
               <th>Student</th>
               <th>Company</th>
               <th>Status</th>
@@ -315,6 +350,11 @@ export default function AdminDashboard() {
               <th>Workplace Supervisor</th>
               <th>Action</th>
               <th>Grade</th>
+=======
+              <th>Student</th><th>Company</th><th>Status</th>
+              <th>Academic Supervisor</th><th>Workplace Supervisor</th>
+              <th>Action</th><th>Grade</th>
+>>>>>>> 3c9ac258a83bade3cee5dffea4cf7cd8dbd433bb
             </tr>
           </thead>
           <tbody>
@@ -324,6 +364,7 @@ export default function AdminDashboard() {
               <tr key={p.id} className={i % 2 === 0 ? 'ad-row-alt' : ''}>
                 <td>{p.student?.username || '—'}</td>
                 <td>{p.company_name}</td>
+<<<<<<< HEAD
                 <td>
                   <span className={`ad-badge ad-badge-${String(p.status).toLowerCase()}`}>
                     {p.status}
@@ -335,11 +376,24 @@ export default function AdminDashboard() {
                   {p.status === 'Pending'
                     ? <button className="ad-activate-btn" onClick={() => handleActivate(p.id)}>Set Active</button>
                     : '—'}
+=======
+                <td><span className={`ad-badge ad-badge-${String(p.status).toLowerCase()}`}>{p.status}</span></td>
+                <td>{p.academic_supervisor?.username || "—"}</td>
+                <td>{p.workplace_supervisor?.username || "—"}</td>
+                <td>
+                  {p.status === "Pending"
+                    ? <button className="ad-activate-btn" onClick={() => handleActivate(p.id)}>Set Active</button>
+                    : "—"}
+>>>>>>> 3c9ac258a83bade3cee5dffea4cf7cd8dbd433bb
                 </td>
                 <td>
                   {p.final_grade && !p.final_grade.published
                     ? <button className="ad-activate-btn" onClick={() => handlePublish(p.final_grade.id)}>Publish Grade</button>
+<<<<<<< HEAD
                     : p.final_grade?.published ? 'Published' : '—'}
+=======
+                    : p.final_grade?.published ? "Published" : "—"}
+>>>>>>> 3c9ac258a83bade3cee5dffea4cf7cd8dbd433bb
                 </td>
               </tr>
             ))}
