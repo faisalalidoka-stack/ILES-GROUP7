@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 785570095b0cb478e73ca29420d4f8c28fa81c38
 // Step 1: extended imports — added publishGrade + getGrades + getFlags
 import {
   getUser, logOut, getPlacements, updatePlacement, createPlacement,
@@ -17,6 +20,7 @@ const emptyPlacement = {
   end_date: '',
   workplace_supervisor_id: '',
   academic_supervisor_id: '',
+<<<<<<< HEAD
 =======
 import { getUser, logOut, getPlacements, updatePlacement, createPlacement, getUsers, publishGrade } from '../services/api';
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -26,6 +30,8 @@ const emptyPlacement = {
   student_id: '', company_name: '', start_date: '',
   end_date: '', workplace_supervisor_id: '', academic_supervisor_id: ''
 >>>>>>> 3c9ac258a83bade3cee5dffea4cf7cd8dbd433bb
+=======
+>>>>>>> 785570095b0cb478e73ca29420d4f8c28fa81c38
 };
 
 export default function AdminDashboard() {
@@ -251,10 +257,14 @@ export default function AdminDashboard() {
 
       <button className="admin-add-btn" onClick={() => setShowForm(!showForm)}>
 <<<<<<< HEAD
+<<<<<<< HEAD
         {showForm ? 'Cancel' : '+ New Placement'}
 =======
         {showForm ? "Cancel" : "+ New Placement"}
 >>>>>>> 3c9ac258a83bade3cee5dffea4cf7cd8dbd433bb
+=======
+        {showForm ? 'Cancel' : '+ New Placement'}
+>>>>>>> 785570095b0cb478e73ca29420d4f8c28fa81c38
       </button>
 
       {showForm && (
@@ -343,6 +353,9 @@ export default function AdminDashboard() {
           <thead>
             <tr>
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 785570095b0cb478e73ca29420d4f8c28fa81c38
               <th>Student</th>
               <th>Company</th>
               <th>Status</th>
@@ -350,11 +363,14 @@ export default function AdminDashboard() {
               <th>Workplace Supervisor</th>
               <th>Action</th>
               <th>Grade</th>
+<<<<<<< HEAD
 =======
               <th>Student</th><th>Company</th><th>Status</th>
               <th>Academic Supervisor</th><th>Workplace Supervisor</th>
               <th>Action</th><th>Grade</th>
 >>>>>>> 3c9ac258a83bade3cee5dffea4cf7cd8dbd433bb
+=======
+>>>>>>> 785570095b0cb478e73ca29420d4f8c28fa81c38
             </tr>
           </thead>
           <tbody>
@@ -365,6 +381,9 @@ export default function AdminDashboard() {
                 <td>{p.student?.username || '—'}</td>
                 <td>{p.company_name}</td>
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 785570095b0cb478e73ca29420d4f8c28fa81c38
                 <td>
                   <span className={`ad-badge ad-badge-${String(p.status).toLowerCase()}`}>
                     {p.status}
@@ -376,6 +395,7 @@ export default function AdminDashboard() {
                   {p.status === 'Pending'
                     ? <button className="ad-activate-btn" onClick={() => handleActivate(p.id)}>Set Active</button>
                     : '—'}
+<<<<<<< HEAD
 =======
                 <td><span className={`ad-badge ad-badge-${String(p.status).toLowerCase()}`}>{p.status}</span></td>
                 <td>{p.academic_supervisor?.username || "—"}</td>
@@ -385,15 +405,21 @@ export default function AdminDashboard() {
                     ? <button className="ad-activate-btn" onClick={() => handleActivate(p.id)}>Set Active</button>
                     : "—"}
 >>>>>>> 3c9ac258a83bade3cee5dffea4cf7cd8dbd433bb
+=======
+>>>>>>> 785570095b0cb478e73ca29420d4f8c28fa81c38
                 </td>
                 <td>
                   {p.final_grade && !p.final_grade.published
                     ? <button className="ad-activate-btn" onClick={() => handlePublish(p.final_grade.id)}>Publish Grade</button>
 <<<<<<< HEAD
+<<<<<<< HEAD
                     : p.final_grade?.published ? 'Published' : '—'}
 =======
                     : p.final_grade?.published ? "Published" : "—"}
 >>>>>>> 3c9ac258a83bade3cee5dffea4cf7cd8dbd433bb
+=======
+                    : p.final_grade?.published ? 'Published' : '—'}
+>>>>>>> 785570095b0cb478e73ca29420d4f8c28fa81c38
                 </td>
               </tr>
             ))}

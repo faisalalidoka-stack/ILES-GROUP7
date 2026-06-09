@@ -57,7 +57,6 @@ export default function StudentDashboard() {
     getNotifications().then(setNotifications).catch(() => setNotifications([]));
   }, []);
 
-<<<<<<< HEAD
   //runs once when the page loads
   //if login takes more than 4 seconds, the button text changes to let the user know it's not frozen — it's just the server starting up
 
@@ -70,13 +69,6 @@ export default function StudentDashboard() {
       prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
     );
   };
-=======
-    //runs once when the page loads
-    //if login takes more than 4 seconds, the button text changes to let the user know it's not frozen — it's just the server starting up"
-   
-    const unread = notifications.filter(n => !n.is_read).length;
-  
->>>>>>> 3c9ac258a83bade3cee5dffea4cf7cd8dbd433bb
 
   // FIX: Renamed fetchLogs → fetchDashboardData to match all call sites
   const fetchDashboardData = async () => {
@@ -706,95 +698,6 @@ export default function StudentDashboard() {
             </section>
           </>
         )}
-<<<<<<< HEAD
-=======
-      {activeTab === 'profile' && (
-      <section className="sd-form-card">
-      <h2 className="sd-form-title">My Profile</h2>
-      {profileMsg && <p className="sd-success">{profileMsg}</p>}
-      <div className="sd-field">
-        <label className="sd-label">Username</label>
-        <input
-          className="sd-input"
-          value={profileForm.username}
-          onChange={e => setProfileForm(p => ({ ...p, username: e.target.value }))}
-        />
-      </div>
-        <div className="sd-field">
-        <label className="sd-label">Profile Picture</label>
-        <input type="file" accept="image/*"
-          onChange={e => setProfileForm(p => ({ ...p, profile_picture: e.target.files[0] }))}
-        />
-        </div>
-      <button className="sd-submit-btn" onClick={async () => {
-        try {
-          const updated = await updateProfile(profileForm);
-          saveUser({ ...user, username: updated.username, profile_picture: updated.profile_picture });
-          setProfileMsg('Profile updated!');
-          setTimeout(() => setProfileMsg(''), 3000);
-        } catch (err) {
-          setProfileMsg('Update failed: ' + err.message);
-        }
-      }}>
-        Save Changes
-      </button>
-    </section>
-    )}
-
-      {activeTab === 'reports' && (
-  <section className="sd-form-card">
-    <h2 className="sd-section-title">My Internship Report</h2>
-
-    <h3>Placement Summary</h3>
-    {placement ? (
-      <p>Company : {placement.company_name} </p>
-    ) : (
-      <p>No placement assigned yet.</p>
-    )}
-
-    <h3>Weekly Log Summary</h3>
-    {logs.length === 0 ? (
-      <p>No logs submitted yet.</p>
-    ) : (
-      <table className="sd-table">
-        <thead>
-          <tr><th>Week</th><th>Hours</th><th>Status</th><th>Skills</th></tr>
-        </thead>
-        <tbody>
-          {logs.map(log => (
-            <tr key={log.id}>
-              <td>{log.week}</td>
-              <td>{log.hours}h</td>
-              <td>{log.status}</td>
-              <td>{log.skills || '—'}</td>
-            </tr>
-          ))}
-        </tbody>
-        <tfoot>
-          <tr>
-            <td><strong>Total</strong></td>
-            <td><strong>{logs.reduce((sum, l) => sum + (l.hours || 0), 0)}h</strong></td>
-            <td colSpan={2}></td>
-          </tr>
-        </tfoot>
-      </table>
-    )}
-
-    <h3>Final Grade</h3>
-    {grade && grade.published ? (
-      <p>
-        Grade: <strong>{grade.grade_letter}</strong> ({grade.score}/100)
-        {grade.remarks && <> — {grade.remarks}</>}
-      </p>
-    ) : (
-      <p>Grade not yet published.</p>
-    )}
-  </section>
-)}
-        {grade && grade.published && <GradeCard grade={grade} />}
-        {activeTab === "profile" && renderProfile()}
-
->>>>>>> 3c9ac258a83bade3cee5dffea4cf7cd8dbd433bb
       </main>
     </div>
   );
