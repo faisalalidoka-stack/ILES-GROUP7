@@ -95,7 +95,7 @@ class FinalGradeSerializer(serializers.ModelSerializer):
         model = FinalGrade
         fields = [
             'id', 'placement', 'grade_letter', 'academic_score',
-            'published', 'remarks', 'created_at', 'updated_at'
+            'published', 'remarks', 'computed_at'
         ]
 
 
